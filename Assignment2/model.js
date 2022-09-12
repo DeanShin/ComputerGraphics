@@ -13,6 +13,7 @@ let squareIndexBuffer, diamondIB;
 let indices, indices_diamond;
 let xOffset, yOffset;
 let offsetXLoc, offsetYLoc; //These are used to access uniform variables in the shaders
+let gameModel;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -221,6 +222,8 @@ function initModel(view) {
     //TODO: Add the code to find the location of offsetY in the shaders and store in offsetYLoc
     offsetYLoc = gl.getUniformLocation(program, "offsetY");
 
+    gameModel = new Game();
+
     initBuffers();
 
     return gl;
@@ -228,12 +231,122 @@ function initModel(view) {
   return null;
 }
 
-//NEW FOR LAB 3
-function updateModelX(offset) {
-  xOffset = xOffset + offset;
+const TokenType = {
+  PLAYER: "PLAYER",
+  MONSTER: "MONSTER",
+  COIN: "COIN",
+};
+
+class Position {
+  constructor(row, col) {
+    this.row = row;
+    this.col = col;
+  }
+
+  equals(otherPosition) {
+    return this.row === otherPosition.row && this.col === otherPosition.col;
+  }
+
+  getRow() {
+    return this.row;
+  }
+
+  getCol() {
+    return this.col;
+  }
+
+  updateRow(offset) {
+    this.row += offset;
+  }
+
+  updateCol(offset) {
+    this.col += offset;
+  }
+
+  getXOffset() {
+    return (this.row / rows) * 2 - 1;
+  }
+
+  getYOffset() {
+    return (this.col / cols) * 2 - 1;
+  }
 }
 
-//TODO: write an updateModelY function
-function updateModelY(offset) {
-  yOffset = yOffset + offset;
+class Token {
+  constructor(tokenType, position) {
+    this.tokenType = tokenType;
+    this.position = position;
+  }
 }
+
+const GameState = {
+  ACTIVE: "ACTIVE",
+  PLAYER_WIN: "PLAYER_WIN",
+  MONSTER_WIN: "MONSTER_WIN",
+};
+
+class Game {
+  constructor() {
+    this.rows = 9;
+    this.cols = 9;
+    this.gameState = GameState.ACTIVE;
+    this.board = new Array(rows.length);
+    for (let i = 0; i < rows; i++) {
+      this.board[i] = new Array(cols.length);
+    }
+    this.player = new Token(TokenType.PLAYER, new Position(0, 0));
+    this.monster = new Token(TokenType.MONSTER, new Position(8, 8));
+    this.coins = [
+      new Token(TokenType.COIN, new Position(2, 2)),
+      new Token(TokenType.COIN, new Position(2, 6)),
+      new Token(TokenType.COIN, new Position(6, 2)),
+      new Token(TokenType.COIN, new Position(6, 6)),
+    ];
+  }
+
+  updatePlayerPosition(rowOffset, colOffset) {
+    this.player.position.updateRow(rowOffset);
+    this.player.position.updateCol(colOffset);
+  }
+
+  updateMonsterPosition() {
+    const rowOffset = Math.round(Math.random()) === 0 ? -1 : 1;
+    const colOffset = Math.round(Math.random()) === 0 ? -1 : 1;
+    this.monster.position.updateRow(rowOffset);
+    this.monster.position.updateCol(rowOffset);
+  }
+
+  processCollisions() {
+    if (this.player.position.equals(this.monster.position)) {
+      this.gameState = GameState.MONSTER_WIN;
+    }
+    this.coins = this.coins.filter(
+      (coin) => !this.player.position.equals(coin.position)
+    );
+    if (this.coins.length === 0) {
+      this.gameState = GameState.PLAYER_WIN;
+    }
+  }
+
+  getPlayerPosition() {
+    return this.player.position;
+  }
+
+  getMonsterPosition() {
+    return this.monster.position;
+  }
+
+  getCoinPositions() {
+    return this.coins.map((coin) => coin.position);
+  }
+}
+
+// //NEW FOR LAB 3
+// function updateModelX(offset) {
+//   xOffset = xOffset + offset;
+// }
+
+// //TODO: write an updateModelY function
+// function updateModelY(offset) {
+//   yOffset = yOffset + offset;
+// }
