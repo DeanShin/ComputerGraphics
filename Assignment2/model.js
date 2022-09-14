@@ -1,5 +1,5 @@
 //FileName:		model.js
-//Programmer:	Dan Cliburn
+//Programmer:	Dan Cliburn, Dean S., Chris C., Chris S.
 //Date:			8/11/2020
 //Purpose:		This file defines the code for our WebGL 2 model
 //The "model" is all of the WebGL2 code that draws our graphics scene
@@ -147,6 +147,7 @@ function initBuffers() {
 function drawModel() {
   console.log("player:", gameModel.player.position.getRowAndCol());
   console.log("monster:", gameModel.monster.position.getRowAndCol());
+  console.log("coins:", gameModel.coins);
   console.log("gameState:", gameModel.gameState);
 
   //Clear the scene
@@ -273,6 +274,7 @@ class Position {
   }
 
   getXAndYOffset() {
+    // TODO: Update this code to have the correct logic. This will depend on how the grid is constructed
     return [(this.row / rows) * 2 - 1, (this.col / cols) * 2 - 1];
   }
 }
@@ -292,21 +294,32 @@ const GameState = {
 
 class Game {
   constructor() {
+    this.restart();
+  }
+
+  restart() {
     this.rows = 9;
     this.cols = 9;
     this.gameState = GameState.ACTIVE;
 
-    this.player = new Token(TokenType.PLAYER, new Position(0, 0));
-    this.monster = new Token(
-      TokenType.MONSTER,
-      new Position(this.rows - 1, this.cols - 1)
-    );
-    this.coins = [
-      new Token(TokenType.COIN, new Position(2, 2)),
-      new Token(TokenType.COIN, new Position(2, 6)),
-      new Token(TokenType.COIN, new Position(6, 2)),
-      new Token(TokenType.COIN, new Position(6, 6)),
-    ];
+    // Put the player in the top left
+    this.player = new Token(TokenType.PLAYER, new Position(this.rows - 1, 0));
+    // Put the monster in the bottom right
+    this.monster = new Token(TokenType.MONSTER, new Position(0, this.cols - 1));
+
+    this.coins = [];
+    // Generate random position for four coins
+    for (let i = 0; i < 4; i++) {
+      while (true) {
+        const potentialRow = Math.floor(Math.random() * this.rows);
+        const potentialCol = Math.floor(Math.random() * this.cols);
+        const potentialPos = new Position(potentialRow, potentialCol);
+        if (!this.occupied(potentialPos)) {
+          this.coins.push(new Token(TokenType.COIN, potentialPos));
+          break;
+        }
+      }
+    }
   }
 
   updatePlayerPosition(rowOffset, colOffset) {
@@ -330,6 +343,16 @@ class Game {
       position.getCol() < 0 ||
       position.getRow() >= this.rows ||
       position.getCol() >= this.cols
+    );
+  }
+
+  occupied(position) {
+    return (
+      [
+        this.player.position,
+        this.monster.position,
+        ...this.coins.map((coin) => coin.position),
+      ].filter((p) => p.equals(position)).length > 0
     );
   }
 

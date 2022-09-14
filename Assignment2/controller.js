@@ -1,5 +1,5 @@
 //FileName:		controller.js
-//Programmer:	Dan Cliburn
+//Programmer:	Dan Cliburn, Dean S., Chris C., Chris S.
 //Date:			8/11/2020
 //Purpose:		This file defines the code for our controller
 //The "controller" runs the program and handles events.
@@ -31,6 +31,18 @@ function checkKey(event) {
     //down arrow key was pressed (40 in ASCII)
     case 40: {
       getGameModel().updatePlayerPosition(-1, 0);
+      break;
+    }
+
+    //n key was pressed (78 in ASCII)
+    case 78: {
+      const gameState = getGameModel().gameState;
+      if (
+        gameState === GameState.MONSTER_WIN ||
+        gameState === GameState.PLAYER_WIN
+      ) {
+        getGameModel().restart();
+      }
       break;
     }
   }
