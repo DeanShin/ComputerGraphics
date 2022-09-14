@@ -145,6 +145,10 @@ function initBuffers() {
 //We call drawModel to render to our canvas
 //This function is similar to the draw() function defined in the section "Time for Action: Rendering a Square" of the textbook
 function drawModel() {
+  console.log("player:", gameModel.player.position.getRowAndCol());
+  console.log("monster:", gameModel.monster.position.getRowAndCol());
+  console.log("gameState:", gameModel.gameState);
+
   //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -231,6 +235,10 @@ function initModel(view) {
   return null;
 }
 
+function getGameModel() {
+  return gameModel;
+}
+
 const TokenType = {
   PLAYER: "PLAYER",
   MONSTER: "MONSTER",
@@ -255,20 +263,17 @@ class Position {
     return this.col;
   }
 
-  updateRow(offset) {
-    this.row += offset;
+  getRowAndCol() {
+    return [this.row, this.col];
   }
 
-  updateCol(offset) {
-    this.col += offset;
+  updateRowAndCol(rowOffset, colOffset) {
+    this.row += rowOffset;
+    this.col += colOffset;
   }
 
-  getXOffset() {
-    return (this.row / rows) * 2 - 1;
-  }
-
-  getYOffset() {
-    return (this.col / cols) * 2 - 1;
+  getXAndYOffset() {
+    return [(this.row / rows) * 2 - 1, (this.col / cols) * 2 - 1];
   }
 }
 
@@ -290,12 +295,12 @@ class Game {
     this.rows = 9;
     this.cols = 9;
     this.gameState = GameState.ACTIVE;
-    this.board = new Array(rows.length);
-    for (let i = 0; i < rows; i++) {
-      this.board[i] = new Array(cols.length);
-    }
+
     this.player = new Token(TokenType.PLAYER, new Position(0, 0));
-    this.monster = new Token(TokenType.MONSTER, new Position(8, 8));
+    this.monster = new Token(
+      TokenType.MONSTER,
+      new Position(this.rows - 1, this.cols - 1)
+    );
     this.coins = [
       new Token(TokenType.COIN, new Position(2, 2)),
       new Token(TokenType.COIN, new Position(2, 6)),
@@ -305,48 +310,68 @@ class Game {
   }
 
   updatePlayerPosition(rowOffset, colOffset) {
-    this.player.position.updateRow(rowOffset);
-    this.player.position.updateCol(colOffset);
+    if (this.gameState !== GameState.ACTIVE) {
+      return;
+    }
+
+    const [row, col] = this.player.position.getRowAndCol();
+
+    if (this.outOfBounds(new Position(row + rowOffset, col + colOffset))) {
+      return;
+    }
+
+    this.player.position.updateRowAndCol(rowOffset, colOffset);
+    this.processCollisions();
+  }
+
+  outOfBounds(position) {
+    return (
+      position.getRow() < 0 ||
+      position.getCol() < 0 ||
+      position.getRow() >= this.rows ||
+      position.getCol() >= this.cols
+    );
   }
 
   updateMonsterPosition() {
-    const rowOffset = Math.round(Math.random()) === 0 ? -1 : 1;
-    const colOffset = Math.round(Math.random()) === 0 ? -1 : 1;
-    this.monster.position.updateRow(rowOffset);
-    this.monster.position.updateCol(rowOffset);
+    if (this.gameState !== GameState.ACTIVE) {
+      return;
+    }
+    let rowOffset = 0;
+    let colOffset = 0;
+
+    const [monsterRow, monsterCol] = this.monster.position.getRowAndCol();
+    const [playerRow, playerCol] = this.player.position.getRowAndCol();
+
+    if (monsterRow < playerRow) {
+      rowOffset = 1;
+    } else if (monsterRow > playerRow) {
+      rowOffset = -1;
+    } else if (monsterCol < playerCol) {
+      colOffset = 1;
+    } else if (monsterCol > playerCol) {
+      colOffset = -1;
+    }
+
+    this.monster.position.updateRowAndCol(rowOffset, colOffset);
+    this.processCollisions();
   }
 
   processCollisions() {
+    if (this.gameState !== GameState.ACTIVE) {
+      return;
+    }
     if (this.player.position.equals(this.monster.position)) {
       this.gameState = GameState.MONSTER_WIN;
+      return;
     }
     this.coins = this.coins.filter(
       (coin) => !this.player.position.equals(coin.position)
     );
     if (this.coins.length === 0) {
       this.gameState = GameState.PLAYER_WIN;
+      return;
     }
-  }
-
-  getPlayerPosition() {
-    return this.player.position;
-  }
-
-  getMonsterPosition() {
-    return this.monster.position;
-  }
-
-  getCoinPositions() {
-    return this.coins.map((coin) => coin.position);
+    return;
   }
 }
-
-// //NEW FOR LAB 3
-// function updateModelX(offset) {
-//   xOffset = xOffset + offset;
-// }
-
-// //TODO: write an updateModelY function
-// function updateModelY(offset) {
-//   yOffset = yOffset + offset;
-// }
