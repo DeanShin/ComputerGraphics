@@ -18,7 +18,7 @@ function checkKey(event) {
 
     //up arrow key was pressed (38 in ASCII)
     case 38: {
-      getGameModel().updatePlayerPosition(1, 0);
+      getGameModel().updatePlayerPosition(-1, 0);
       break;
     }
 
@@ -30,7 +30,7 @@ function checkKey(event) {
 
     //down arrow key was pressed (40 in ASCII)
     case 40: {
-      getGameModel().updatePlayerPosition(-1, 0);
+      getGameModel().updatePlayerPosition(1, 0);
       break;
     }
 
@@ -42,9 +42,16 @@ function checkKey(event) {
         gameState === GameState.PLAYER_WIN
       ) {
         getGameModel().restart();
+        clearInterval(timer);
+        timer = setInterval(moveMonster, getGameModel().monsterSpeed);
       }
       break;
     }
+  }
+
+  const gameState = getGameModel().gameState;
+  if (gameState !== GameState.ACTIVE) {
+    clearInterval(timer);
   }
   //redraw the scene so that we can see changes
   drawModel(); //defined in model.js
@@ -64,7 +71,7 @@ function controller() {
     //make sure everything got initialized before proceeding
     drawModel(); // defined in model.js
 
-    timer = setInterval(moveMonster, 250); //move the monster 4 times a second
+    timer = setInterval(moveMonster, getGameModel().monsterSpeed); //move the monster 4 times a second
     window.onkeydown = checkKey; //call checkKey whenever a key is pressed
   } else {
     alert("Could not initialize the view and model");

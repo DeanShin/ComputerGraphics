@@ -145,10 +145,25 @@ function initBuffers() {
 //We call drawModel to render to our canvas
 //This function is similar to the draw() function defined in the section "Time for Action: Rendering a Square" of the textbook
 function drawModel() {
-  console.log("player:", gameModel.player.position.getRowAndCol());
-  console.log("monster:", gameModel.monster.position.getRowAndCol());
-  console.log("coins:", gameModel.coins);
-  console.log("gameState:", gameModel.gameState);
+  const tokens = [
+    gameModel.player,
+    gameModel.monster,
+    ...gameModel.coins,
+    ...gameModel.walls,
+  ];
+  const board = new Array(gameModel.rows);
+  for (let i = 0; i < gameModel.rows; i++) {
+    board[i] = new Array(gameModel.cols);
+    for (let j = 0; j < gameModel.cols; j++) {
+      const tokenAtPos = tokens.filter((token) =>
+        token.position.equals(new Position(i, j))
+      )[0];
+      board[i][j] = tokenAtPos === undefined ? "." : tokenAtPos.tokenType[0];
+    }
+  }
+
+  console.log(gameModel.gameState);
+  console.table(board);
 
   //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -244,6 +259,7 @@ const TokenType = {
   PLAYER: "PLAYER",
   MONSTER: "MONSTER",
   COIN: "COIN",
+  WALL: "WALL",
 };
 
 class Position {
@@ -268,11 +284,6 @@ class Position {
     return [this.row, this.col];
   }
 
-  updateRowAndCol(rowOffset, colOffset) {
-    this.row += rowOffset;
-    this.col += colOffset;
-  }
-
   getXAndYOffset() {
     // TODO: Update this code to have the correct logic. This will depend on how the grid is constructed
     return [(this.row / rows) * 2 - 1, (this.col / cols) * 2 - 1];
@@ -294,28 +305,45 @@ const GameState = {
 
 class Game {
   constructor() {
+    this.monsterSpeed = 1000;
     this.restart();
   }
 
   restart() {
     this.rows = 9;
     this.cols = 9;
+    this.monsterSpeed *= 0.75;
     this.gameState = GameState.ACTIVE;
 
     // Put the player in the top left
     this.player = new Token(TokenType.PLAYER, new Position(this.rows - 1, 0));
     // Put the monster in the bottom right
     this.monster = new Token(TokenType.MONSTER, new Position(0, this.cols - 1));
-
     this.coins = [];
+    this.walls = [];
+
     // Generate random position for four coins
     for (let i = 0; i < 4; i++) {
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
         const potentialCol = Math.floor(Math.random() * this.cols);
         const potentialPos = new Position(potentialRow, potentialCol);
-        if (!this.occupied(potentialPos)) {
+        if (!this.occupiedByToken(potentialPos)) {
           this.coins.push(new Token(TokenType.COIN, potentialPos));
+          break;
+        }
+      }
+    }
+
+    // Generate random position for three walls.
+    this.walls = [];
+    for (let i = 0; i < 3; i++) {
+      while (true) {
+        const potentialRow = Math.floor(Math.random() * this.rows);
+        const potentialCol = Math.floor(Math.random() * this.cols);
+        const potentialPos = new Position(potentialRow, potentialCol);
+        if (!this.occupiedByToken(potentialPos)) {
+          this.walls.push(new Token(TokenType.WALL, potentialPos));
           break;
         }
       }
@@ -328,31 +356,37 @@ class Game {
     }
 
     const [row, col] = this.player.position.getRowAndCol();
+    const newPosition = new Position(row + rowOffset, col + colOffset);
 
-    if (this.outOfBounds(new Position(row + rowOffset, col + colOffset))) {
+    if (this.outOfBounds(newPosition) || this.occupiedByWall(newPosition)) {
       return;
     }
 
-    this.player.position.updateRowAndCol(rowOffset, colOffset);
+    this.player.position = newPosition;
     this.processCollisions();
   }
 
   outOfBounds(position) {
-    return (
-      position.getRow() < 0 ||
-      position.getCol() < 0 ||
-      position.getRow() >= this.rows ||
-      position.getCol() >= this.cols
-    );
+    const [row, col] = position.getRowAndCol();
+
+    return row < 0 || col < 0 || row >= this.rows || col >= this.cols;
   }
 
-  occupied(position) {
+  occupiedByToken(position) {
     return (
       [
         this.player.position,
         this.monster.position,
         ...this.coins.map((coin) => coin.position),
+        ...this.walls.map((wall) => wall.position),
       ].filter((p) => p.equals(position)).length > 0
+    );
+  }
+
+  occupiedByWall(position) {
+    return (
+      this.walls.map((wall) => wall.position).filter((p) => p.equals(position))
+        .length > 0
     );
   }
 
@@ -366,6 +400,7 @@ class Game {
     const [monsterRow, monsterCol] = this.monster.position.getRowAndCol();
     const [playerRow, playerCol] = this.player.position.getRowAndCol();
 
+    // Naive algorithm to move the monster towards the player.
     if (monsterRow < playerRow) {
       rowOffset = 1;
     } else if (monsterRow > playerRow) {
@@ -376,7 +411,15 @@ class Game {
       colOffset = -1;
     }
 
-    this.monster.position.updateRowAndCol(rowOffset, colOffset);
+    const newPosition = new Position(
+      monsterRow + rowOffset,
+      monsterCol + colOffset
+    );
+    if (this.outOfBounds(newPosition) || this.occupiedByWall(newPosition)) {
+      return;
+    }
+
+    this.monster.position = newPosition;
     this.processCollisions();
   }
 
@@ -384,13 +427,16 @@ class Game {
     if (this.gameState !== GameState.ACTIVE) {
       return;
     }
+    // Monster wins if monster collided with player
     if (this.player.position.equals(this.monster.position)) {
       this.gameState = GameState.MONSTER_WIN;
       return;
     }
+    // Coin is collected if player collided with coin
     this.coins = this.coins.filter(
       (coin) => !this.player.position.equals(coin.position)
     );
+    // Player wins if all coins have been collected
     if (this.coins.length === 0) {
       this.gameState = GameState.PLAYER_WIN;
       return;
