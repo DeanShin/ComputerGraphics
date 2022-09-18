@@ -174,15 +174,19 @@ function initBuffers() {
       ...[-0.1, 0.5, 0],
     ],
     // I
-    ...[...[0.0, 0.5, 0], ...[0, 0.3, 0]],
+    ...[...[0.0, 0.5, 0],
+    ...[0, 0.3, 0],
     // N
-    ...[...[0.1, 0.3, 0], ...[0.1, 0.5, 0], ...[0.3, 0.3, 0], ...[0.3, 0.5, 0]],
+    ...[0.1, 0.3, 0], 
+    ...[0.1, 0.5, 0], 
+    ...[0.3, 0.3, 0], 
+    ...[0.3, 0.5, 0]],
   ];
 
   // need to modify vertices to display lose text.
   let loseTextVert = [
+    //L
     ...[
-      //L
       ...[-0.35, 0.5, 0],
       ...[-0.45, 0.3, 0],
       ...[-0.25, 0.3, 0],
@@ -212,7 +216,6 @@ function initBuffers() {
     ...[0.15, 0.3, 0],
     ...[0.25, 0.3, 0],
         ],
-
   ];
 
   // these store the number of verticies to be used later on
@@ -528,49 +531,12 @@ class Game {
 
     // Generate random position for three walls.
     this.walls = [];
-
-    const isCoinBlocked = () => {
-      const visited = new Array(this.rows);
-      for (let i = 0; i < this.rows; i++) {
-        visited[i] = new Array(this.cols).fill(false);
-      }
-
-      const dirs = [
-        [-1, 0],
-        [1, 0],
-        [0, -1],
-        [0, 1],
-      ];
-
-      const reachableCoinCount = (i, j) => {
-        const curPos = new Position(i, j);
-        if (
-          visited[i][j] ||
-          this.walls.some((wall) => wall.position.equals(curPos))
-        ) {
-          return 0;
-        }
-        visited[i][j] = true;
-
-        let ans = 0 + this.coins.some((coin) => coin.position.equals(curPos));
-        for (const [di, dj] of dirs) {
-          ans += reachableCoinCount(i + di, j + dj);
-        }
-        return ans;
-      };
-
-      return (
-        reachableCoinCount(...this.player.position.getRowAndCol()) ===
-        this.coins.length
-      );
-    };
-
-    // for (let i = 0; i < 10; i++) {
+    // for (let i = 0; i < 3; i++) {
     //   while (true) {
     //     const potentialRow = Math.floor(Math.random() * this.rows);
     //     const potentialCol = Math.floor(Math.random() * this.cols);
     //     const potentialPos = new Position(potentialRow, potentialCol);
-    //     if (!this.occupiedByToken(potentialPos) || isCoinBlocked()) {
+    //     if (!this.occupiedByToken(potentialPos)) {
     //       this.walls.push(new Token(TokenType.WALL, potentialPos));
     //       break;
     //     }
