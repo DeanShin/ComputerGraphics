@@ -18,6 +18,7 @@ let playerFaceVertBuffer,
   smileVertBuffer,
   frownVertBuffer,
   coinVertBuffer,
+  wallVertBuffer,
   gridVertBuffer,
   winTextVertBuffer,
   loseTextVertBuffer;
@@ -29,6 +30,7 @@ let playerFaceVertCount,
   smileVertCount,
   frownVertCount,
   coinVertCount,
+  wallVertCount,
   gridVertCount,
   winTextVertCount,
   loseTextVertCount;
@@ -120,6 +122,17 @@ function initBuffers() {
     frownVert.push(Math.cos(num) / 15, Math.sin(num) / 15 - 0.06, 0);
   }
 
+  const wallVert = [
+    ...[-0.05, 0.1, 0],
+    ...[0.05, 0.1, 0],
+    ...[0.1, 0.05, 0],
+    ...[0.1, -0.05, 0],
+    ...[0.05, -0.1, 0],
+    ...[-0.05, -0.1, 0],
+    ...[-0.1, -0.05, 0],
+    ...[-0.1, 0.05, 0],
+  ];
+
   // this creates all the grid verticies
   const gridVert = []; //array to hold vertex positions
   const gridLimit = 0.9;
@@ -209,7 +222,7 @@ function initBuffers() {
       ...[0.1, 0.5, 0],
       ...[0.2, 0.5, 0],
     ],
-    // //E
+    //E
     ...[
       ...[0.4, 0.5, 0],
       ...[0.3, 0.5, 0],
@@ -233,6 +246,7 @@ function initBuffers() {
   smileVertCount = smileVert.length / 3;
   frownVertCount = frownVert.length / 3;
   coinVertCount = coinVert.length / 3;
+  wallVertCount = wallVert.length / 3;
   gridVertCount = gridVert.length / 3;
   winTextVertCount = winTextVert.length / 3;
   loseTextVertCount = loseTextVert.length / 3;
@@ -278,6 +292,10 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, coinVertBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coinVert), gl.STATIC_DRAW);
 
+  wallVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, wallVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(wallVert), gl.STATIC_DRAW);
+
   gridVertBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, gridVertBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridVert), gl.STATIC_DRAW);
@@ -319,6 +337,7 @@ function drawModel() {
   gl.drawArrays(gl.LINES, 0, gridVertCount); //render all of the vertices (NumVertices)
 
   // This section renders the coins
+
   for (const coin of gameModel.coins) {
     // Offset
     [offsetX, offsetY] = coin.position.getXAndYOffset(
@@ -333,6 +352,24 @@ function drawModel() {
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.vertexAttrib3f(1, 1, 0.7, 0);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, coinVertCount);
+  }
+
+  // Thi section renders the walls
+
+  for (const wall of gameModel.walls) {
+    // Offset
+    [offsetX, offsetY] = wall.position.getXAndYOffset(
+      gameModel.rows,
+      gameModel.cols
+    );
+    gl.uniform1f(offsetXLoc, offsetX);
+    gl.uniform1f(offsetYLoc, offsetY);
+
+    // Draw
+    gl.bindBuffer(gl.ARRAY_BUFFER, wallVertBuffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 0.5, 0.5, 0.5);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, wallVertCount);
   }
 
   // This section below renders the player/hero
@@ -513,7 +550,8 @@ class Game {
   restart() {
     this.rows = 9;
     this.cols = 9;
-    this.monsterSpeed *= 0.75;
+    // Every round, the monster should increase in speed.
+    this.monsterSpeed = Math.max(this.monsterSpeed * 0.75, 100);
     this.gameState = GameState.ACTIVE;
 
     // Put the player in the top left
@@ -538,15 +576,63 @@ class Game {
 
     // Generate random position for three walls.
     this.walls = [];
-    for (let i = 0; i < 3; i++) {
+
+    // Helper function that returns if a player cannot reach a coin given the current wall/coin layout.
+    const isCoinBlocked = () => {
+      const visited = new Array(this.rows);
+      for (let i = 0; i < this.rows; i++) {
+        visited[i] = new Array(this.cols).fill(false);
+      }
+
+      const dirs = [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+      ];
+
+      const reachableCoinCount = (i, j) => {
+        const curPos = new Position(i, j);
+        if (
+          i < 0 ||
+          i >= this.rows ||
+          j < 0 ||
+          j >= this.cols ||
+          visited[i][j] ||
+          this.walls.some((wall) => wall.position.equals(curPos))
+        ) {
+          return 0;
+        }
+        visited[i][j] = true;
+
+        let ans = 0 + this.coins.some((coin) => coin.position.equals(curPos));
+        for (const [di, dj] of dirs) {
+          ans += reachableCoinCount(i + di, j + dj);
+        }
+        return ans;
+      };
+
+      return (
+        reachableCoinCount(...this.player.position.getRowAndCol()) !==
+        this.coins.length
+      );
+    };
+
+    const wallCount = Math.floor(Math.random() * 5) + 5;
+    for (let i = 0; i < wallCount; i++) {
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
         const potentialCol = Math.floor(Math.random() * this.cols);
         const potentialPos = new Position(potentialRow, potentialCol);
-        if (!this.occupiedByToken(potentialPos)) {
-          this.walls.push(new Token(TokenType.WALL, potentialPos));
-          break;
+        if (this.occupiedByToken(potentialPos)) continue;
+
+        this.walls.push(new Token(TokenType.WALL, potentialPos));
+
+        if (isCoinBlocked()) {
+          this.walls.pop();
+          continue;
         }
+        break;
       }
     }
   }
