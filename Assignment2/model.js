@@ -504,19 +504,12 @@ class Position {
     return this.row === otherPosition.row && this.col === otherPosition.col;
   }
 
-  getRow() {
-    return this.row;
-  }
-
-  getCol() {
-    return this.col;
-  }
-
   getRowAndCol() {
     return [this.row, this.col];
   }
 
   getXAndYOffset(rows, cols) {
+    // Transform from the internal row/col representation to canvas coordinates
     // X and Y range for grid is [-0.8, 0.8]
     return [
       (this.col / (cols - 1)) * 1.6 - 0.8,
@@ -655,7 +648,7 @@ class Game {
         .length > 0
     );
   }
-  
+
   updatePlayerPosition(rowOffset, colOffset) {
     if (this.gameState !== GameState.ACTIVE) {
       return;
