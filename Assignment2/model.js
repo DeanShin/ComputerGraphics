@@ -7,12 +7,31 @@
 //these variables can be accessed in any function
 let gl;
 let program;
-let squareVertexBuffer, triangleVB, diamondVB;
-let squareVertexColorBuffer, triangleVCB;
-let squareIndexBuffer, diamondIB;
-let indices, indices_diamond;
-let xOffset, yOffset;
 let offsetXLoc, offsetYLoc; //These are used to access uniform variables in the shaders
+let vertexBuffer;
+let vertex1Buffer;
+let vertex2Buffer;
+let vertex3Buffer;
+let vertex4Buffer;
+let vertex5Buffer;
+let vertex6Buffer;
+let vertex7Buffer;
+let vertex8Buffer;
+let winBuffer;
+let loseBuffer;
+
+let numVertices;
+let numVertices1;
+let numVertices2;
+let numVertices3;
+let numVertices4;
+let numVertices5;
+let numVertices6;
+let numVertices7;
+let numVertices8;
+let gridNumVertices;
+let winNumVertices;
+let loseNumVertices;
 let gameModel;
 
 //Given a canvas element, return the WebGL2 context
@@ -73,156 +92,369 @@ function initProgram() {
 //Set up the buffers we need to use for rendering
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
-  //array data for the square
-  const vertices = [-0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0.0];
-  const colors = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
+  // yellow circle
+  let vertices = [];
+  let colors = [];
 
-  //array data for the diamond - note that I will reuse the square's colors array for the diamond
-  const vertices_diamond = [
-    -1, -0.75, 0, -0.75, -1, 0, -0.5, -0.75, 0, -0.75, -0.5, 0,
+  // red smile
+  let vertices1 = [];
+  let colors1 = [];
+
+  // right eye
+  let vertices2 = [];
+  let colors2 = [];
+
+  // left eye
+  let vertices3 = [];
+  let colors3 = [];
+
+  //red frown
+  let vertices4 = [];
+  let colors4 = [];
+
+  // red circle
+  let vertices5 = [];
+  let colors5 = [];
+
+  // right eye mad
+  let vertices6 = [];
+  let colors6 = [];
+
+  //left eye mad
+  let vertices7 = [];
+  let colors7 = [];
+
+  //coin 1
+  let vertices8 = [];
+  let colors8 = [];
+
+  //coin 2
+  let vertices9 = [];
+  let colors9 = [];
+
+  //coin 3
+  let vertices10 = [];
+  let colors10 = [];
+
+  //coin 4
+  let vertices11 = [];
+  let colors11 = [];
+
+  // this for loops pushes all the verticies for all the circles in the game
+  let index;
+  for (index = -350; index < 351; index++) {
+    num = index / 100;
+    vertices.push(Math.cos(num) / 10);
+    vertices.push(Math.sin(num) / 10);
+    vertices.push(0);
+
+    vertices5.push(Math.cos(num) / 10);
+    vertices5.push(Math.sin(num) / 10);
+    vertices5.push(0);
+
+    vertices2.push(Math.cos(num) / 50 + 0.04);
+    vertices2.push(Math.sin(num) / 50 + 0.04);
+    vertices2.push(0);
+
+    vertices6.push(Math.cos(num) / 50 + 0.04);
+    vertices6.push(Math.sin(num) / 50 + 0.04);
+    vertices6.push(0);
+
+    vertices3.push(Math.cos(num) / 50 - 0.04);
+    vertices3.push(Math.sin(num) / 50 + 0.04);
+    vertices3.push(0);
+
+    vertices7.push(Math.cos(num) / 50 - 0.04);
+    vertices7.push(Math.sin(num) / 50 + 0.04);
+    vertices7.push(0);
+
+    // Coin
+    num = index / 100;
+    vertices8.push(Math.cos(num) / 10);
+    vertices8.push(Math.sin(num) / 10);
+    vertices8.push(0);
+  }
+  // this for loops pushes the colors for all the circles
+  for (index = 0; index < 701; index++) {
+    colors.push([1.0, 1.0, 0.0]);
+    colors5.push([1.0, 0.0, 0.0]);
+
+    colors2.push([0.0, 0.0, 0.0]);
+    colors6.push([0.0, 0.0, 0.0]);
+
+    colors3.push([0.0, 0.0, 0.0]);
+    colors7.push([0.0, 0.0, 0.0]);
+
+    // Coin
+    colors8.push([1.0, 0.7, 0.0]);
+  }
+
+  // this for loops creates all the verticies for the smile/frown
+  for (index = -310; index < 0; index++) {
+    num = index / 100;
+    vertices1.push(Math.cos(num) / 15);
+    vertices1.push(Math.sin(num) / 15);
+    vertices1.push(0);
+
+    num = -num;
+    vertices4.push(Math.cos(num) / 15);
+    vertices4.push(Math.sin(num) / 15 - 0.06);
+    vertices4.push(0);
+  }
+  // pushes color to the frown/smile
+  for (index = 0; index < 310; index++) {
+    colors1.push([1.0, 0.0, 0.0]);
+    colors4.push([0.0, 0.0, 0.0]);
+  }
+
+  // this creates all the grid verticies
+
+  let gridVert = []; //array to hold vertex positions
+  let gridLimit = 0.9;
+  let xPos = -gridLimit;
+  let yPos = -gridLimit;
+  let cellSize = 0.2;
+  let gridSize = 22;
+  gridNumVertices = gridSize * 4;
+  for (i = 0; i < gridSize; i++) {
+    gridVert.push(xPos);
+    gridVert.push(yPos);
+    gridVert.push(0);
+    gridVert.push(xPos);
+    gridVert.push(-yPos);
+    gridVert.push(0);
+    xPos = xPos + cellSize;
+  }
+  xPos = gridLimit;
+  for (i = 0; i < gridSize; i++) {
+    gridVert.push(xPos);
+    gridVert.push(yPos);
+    gridVert.push(0);
+    gridVert.push(-xPos);
+    gridVert.push(yPos);
+    gridVert.push(0);
+    yPos = yPos + cellSize;
+  }
+
+  let winText = [
+    ...[
+      ...[-0.5, 0.5, 0],
+      ...[-0.4, 0.3, 0],
+      ...[-0.3, 0.5, 0],
+      ...[-0.2, 0.3, 0],
+      ...[-0.1, 0.5, 0],
+    ],
+    ...[...[0.0, 0.5, 0], ...[0, 0.3, 0]],
+    ...[...[0.1, 0.3, 0], ...[0.1, 0.5, 0], ...[0.3, 0.3, 0], ...[0.3, 0.5, 0]],
   ];
+  winNumVertices = 11;
 
-  //array data for a triangle in the upper right corner of the screen
-  const vertices2 = [0.5, 0.5, 0, 1.0, 0.5, 0, 0.75, 1.0, 0];
-  const colors2 = [0.5, 0.5, 0, 0, 0.5, 0.5, 0.5, 0, 0.5];
+  // need to modify vertiies to display lose text.
 
-  //Indices defined in counter-clockwise order
-  indices = [0, 1, 2, 0, 2, 3];
-  indices_diamond = [0, 1, 3, 2, 1, 3];
+  let loseText = [
+    ...[
+      ...[-0.5, 0.5, 0],
+      ...[-0.5, 0, 0],
+      ...[-0.3, 0, 0],
+      ...[-0.3, 0.5, 0],
+      ...[-0.2, 0.5, 0],
+    ],
+    ...[...[-0.2, 0, 0], ...[-0.3, 0, 0], ...[-0.1, 0, 0], , ...[-0.1, 0.5, 0]],
+    ...[
+      ...[0, 0.5, 0],
+      ...[0.1, 0.5, 0],
+      ...[0, 0.5, 0],
+      ...[0, 0.3, 0],
+      ...[0.1, 0.3, 0],
+      ...[0, 0.3, 0],
+      ...[0, 0, 0],
+      ...[0.1, 0, 0],
+    ],
+  ];
+  loseNumVertices = 17;
 
-  //Setting up the VBO for the SQUARE vertex positions
-  squareVertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
+  // these store the number of verticies to be used later on
+
+  numVertices = vertices.length / 3;
+  numVertices1 = vertices1.length / 3;
+  numVertices2 = vertices2.length / 3;
+  numVertices3 = vertices3.length / 3;
+  numVertices4 = vertices4.length / 3;
+  numVertices5 = vertices5.length / 3;
+  numVertices6 = vertices6.length / 3;
+  numVertices7 = vertices7.length / 3;
+  numVertices8 = vertices8.length / 3;
+
+  //Setting up the VBO for the vertex positions
+  vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-  //Setting up the IBO for the SQUARE
-  squareIndexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
-    new Uint16Array(indices),
-    gl.STATIC_DRAW
-  );
+  vertex1Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex1Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices1), gl.STATIC_DRAW);
 
-  //Setting up the VBO for the SQUARE vertex colors
-  squareVertexColorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-  //Setting up the VBO for TRIANGLE vertex positions
-  triangleVB = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVB);
+  vertex2Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex2Buffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices2), gl.STATIC_DRAW);
 
-  //Setting up the VBO for TRIANGLE vertex colors
-  triangleVCB = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVCB);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors2), gl.STATIC_DRAW);
+  vertex3Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex3Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices3), gl.STATIC_DRAW);
 
-  //Setting up the VBO for the DIAMOND vertex positions
-  diamondVB = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, diamondVB);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array(vertices_diamond),
-    gl.STATIC_DRAW
-  );
+  vertex4Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex4Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices4), gl.STATIC_DRAW);
 
-  //Setting up the IBO for the DIAMOND
-  diamondIB = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, diamondIB);
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
-    new Uint16Array(indices_diamond),
-    gl.STATIC_DRAW
-  );
+  vertex5Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex5Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices5), gl.STATIC_DRAW);
+
+  vertex6Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex6Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices6), gl.STATIC_DRAW);
+
+  vertex7Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex7Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices7), gl.STATIC_DRAW);
+
+  vertex8Buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex8Buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices8), gl.STATIC_DRAW);
+
+  gridBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridVert), gl.STATIC_DRAW);
+
+  winBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, winBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(winText), gl.STATIC_DRAW);
+
+  loseBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, loseBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(loseText), gl.STATIC_DRAW);
+
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0);
 
   //Clean
+  gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
 //We call drawModel to render to our canvas
-//This function is similar to the draw() function defined in the section "Time for Action: Rendering a Square" of the textbook
 function drawModel() {
-  const tokens = [
-    gameModel.player,
-    gameModel.monster,
-    ...gameModel.coins,
-    ...gameModel.walls,
-  ];
-  const board = new Array(gameModel.rows);
-  for (let i = 0; i < gameModel.rows; i++) {
-    board[i] = new Array(gameModel.cols);
-    for (let j = 0; j < gameModel.cols; j++) {
-      const tokenAtPos = tokens.filter((token) =>
-        token.position.equals(new Position(i, j))
-      )[0];
-      board[i][j] = tokenAtPos === undefined ? "." : tokenAtPos.tokenType[0];
-    }
-  }
-
-  console.log(gameModel.gameState);
-  console.table(board);
+  let [offsetX, offsetY] = [0, 0];
+  gl.uniform1f(offsetXLoc, offsetX);
+  gl.uniform1f(offsetYLoc, offsetY);
 
   //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  //TODO: For task two you will need to make code changes here
+  // Render the grid
+  gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 0, 0.7, 0);
+  gl.drawArrays(gl.LINES, 0, gridNumVertices); //render all of the vertices (NumVertices)
 
-  //Use the buffers we've constructed - first the vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
+  // Render the 'Win' text
+  if (gameModel.gameState === GameState.PLAYER_WIN) {
+    gl.uniform1f(offsetXLoc, 0); //send the value of xOffset to the shaders
+    gl.uniform1f(offsetYLoc, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, winBuffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 1, 1, 0);
+    gl.drawArrays(gl.LINE_STRIP, 0, winNumVertices); //render all of the vertices (NumVertices
+  }
+
+  // Render the 'Lose' text
+  if (gameModel.gameState === GameState.MONSTER_WIN) {
+    gl.uniform1f(offsetXLoc, 0); //send the value of xOffset to the shaders
+    gl.uniform1f(offsetYLoc, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, loseBuffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 1, 0, 0);
+    gl.drawArrays(gl.LINE_STRIP, 0, loseNumVertices); //render all of the vertices (NumVertices
+  }
+
+  // This section renders the coins
+  for (const coin of gameModel.coins) {
+    [offsetX, offsetY] = coin.position.getXAndYOffset(
+      gameModel.rows,
+      gameModel.cols
+    );
+    gl.uniform1f(offsetXLoc, offsetX);
+    gl.uniform1f(offsetYLoc, offsetY);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertex8Buffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 1, 0.7, 0);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices8);
+  }
+
+  // This section below renders the player/hero
+  [offsetX, offsetY] = gameModel.player.position.getXAndYOffset(
+    gameModel.rows,
+    gameModel.cols
+  );
+  gl.uniform1f(offsetXLoc, offsetX); //send the value of xOffset to the shaders
+  gl.uniform1f(offsetYLoc, offsetY); //send the value of yOffset to the shaders
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 1, 1, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex1Buffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 1, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices1); //render all of the vertices (NumVertices)
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex2Buffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices2); //render all of the vertices (NumVertices)
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex3Buffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices3); //render all of the vertices (NumVertices)
+
+  // This section below renders the monster
+  [offsetX, offsetY] = gameModel.monster.position.getXAndYOffset(
+    gameModel.rows,
+    gameModel.cols
+  );
+  gl.uniform1f(offsetXLoc, offsetX); //send the value of xOffset to the shaders
+  gl.uniform1f(offsetYLoc, offsetY); //send the value of yOffset to the shaders
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex5Buffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 1, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices5);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex4Buffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices4); //render all of the vertices (NumVertices)
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex6Buffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices6); //render all of the vertices (NumVertices)
 
-  //Now the vertex colors
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
-  gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(1);
-
-  //Bind IBO
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
-
-  //Draw to the scene using triangle primitives
-  gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-
-  //Now draw the diamond
-  //Use the buffers we've constructed - first the vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, diamondVB);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertex7Buffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
-  //reuse the square color buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexColorBuffer);
-  gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(1);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, diamondIB);
-  gl.drawElements(gl.TRIANGLES, indices_diamond.length, gl.UNSIGNED_SHORT, 0);
-
-  gl.uniform1f(offsetXLoc, xOffset);
-  gl.uniform1f(offsetYLoc, yOffset);
-
-  //Now draw the triangle
-  //Use the buffers we've constructed - first the vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVB);
-  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(0);
-
-  //Now the vertex colors
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVCB);
-  gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(1);
-
-  //Draw using drawArrays
-  //TODO: For task two you will need to make code changes here
-  gl.drawArrays(gl.TRIANGLES, 0, 3); //The '3' tells drawArrays there are 3 vertices
-
-  gl.uniform1f(offsetXLoc, 0);
-  gl.uniform1f(offsetYLoc, 0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices7); //render all of the vertices (NumVertices)
 
   //Clean
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+  gl.bindVertexArray(null);
 }
 
 //return the WebGL context to the caller
@@ -235,11 +467,7 @@ function initModel(view) {
 
     initProgram();
 
-    //NEW LAB 3 CODE TO WORK WITH THE UNIFORM VARIABLES
-    xOffset = 0;
-    yOffset = 0;
     offsetXLoc = gl.getUniformLocation(program, "offsetX");
-    //TODO: Add the code to find the location of offsetY in the shaders and store in offsetYLoc
     offsetYLoc = gl.getUniformLocation(program, "offsetY");
 
     gameModel = new Game();
@@ -284,9 +512,12 @@ class Position {
     return [this.row, this.col];
   }
 
-  getXAndYOffset() {
-    // TODO: Update this code to have the correct logic. This will depend on how the grid is constructed
-    return [(this.row / rows) * 2 - 1, (this.col / cols) * 2 - 1];
+  getXAndYOffset(rows, cols) {
+    // X and Y range for grid is [-0.8, 0.8]
+    return [
+      (this.col / (cols - 1)) * 1.6 - 0.8,
+      (this.row / (rows - 1)) * 1.6 - 0.8,
+    ];
   }
 }
 
@@ -337,17 +568,17 @@ class Game {
 
     // Generate random position for three walls.
     this.walls = [];
-    for (let i = 0; i < 3; i++) {
-      while (true) {
-        const potentialRow = Math.floor(Math.random() * this.rows);
-        const potentialCol = Math.floor(Math.random() * this.cols);
-        const potentialPos = new Position(potentialRow, potentialCol);
-        if (!this.occupiedByToken(potentialPos)) {
-          this.walls.push(new Token(TokenType.WALL, potentialPos));
-          break;
-        }
-      }
-    }
+    // for (let i = 0; i < 3; i++) {
+    //   while (true) {
+    //     const potentialRow = Math.floor(Math.random() * this.rows);
+    //     const potentialCol = Math.floor(Math.random() * this.cols);
+    //     const potentialPos = new Position(potentialRow, potentialCol);
+    //     if (!this.occupiedByToken(potentialPos)) {
+    //       this.walls.push(new Token(TokenType.WALL, potentialPos));
+    //       break;
+    //     }
+    //   }
+    // }
   }
 
   updatePlayerPosition(rowOffset, colOffset) {

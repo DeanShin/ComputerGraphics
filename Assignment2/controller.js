@@ -18,7 +18,7 @@ function checkKey(event) {
 
     //up arrow key was pressed (38 in ASCII)
     case 38: {
-      getGameModel().updatePlayerPosition(-1, 0);
+      getGameModel().updatePlayerPosition(1, 0);
       break;
     }
 
@@ -30,7 +30,7 @@ function checkKey(event) {
 
     //down arrow key was pressed (40 in ASCII)
     case 40: {
-      getGameModel().updatePlayerPosition(1, 0);
+      getGameModel().updatePlayerPosition(-1, 0);
       break;
     }
 
