@@ -632,22 +632,6 @@ class Game {
     }
   }
 
-  updatePlayerPosition(rowOffset, colOffset) {
-    if (this.gameState !== GameState.ACTIVE) {
-      return;
-    }
-
-    const [row, col] = this.player.position.getRowAndCol();
-    const newPosition = new Position(row + rowOffset, col + colOffset);
-
-    if (this.outOfBounds(newPosition) || this.occupiedByWall(newPosition)) {
-      return;
-    }
-
-    this.player.position = newPosition;
-    this.processCollisions();
-  }
-
   outOfBounds(position) {
     const [row, col] = position.getRowAndCol();
 
@@ -670,6 +654,22 @@ class Game {
       this.walls.map((wall) => wall.position).filter((p) => p.equals(position))
         .length > 0
     );
+  }
+  
+  updatePlayerPosition(rowOffset, colOffset) {
+    if (this.gameState !== GameState.ACTIVE) {
+      return;
+    }
+
+    const [row, col] = this.player.position.getRowAndCol();
+    const newPosition = new Position(row + rowOffset, col + colOffset);
+
+    if (this.outOfBounds(newPosition) || this.occupiedByWall(newPosition)) {
+      return;
+    }
+
+    this.player.position = newPosition;
+    this.processCollisions();
   }
 
   updateMonsterPosition() {
