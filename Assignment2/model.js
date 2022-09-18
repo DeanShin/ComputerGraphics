@@ -91,80 +91,55 @@ function initProgram() {
 //Set up the buffers we need to use for rendering
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
-  let playerFaceVert = [];
-  let monsterFaceVert = [];
-  let leftEyeVert = [];
-  let rightEyeVert = [];
-  let coinVert = [];
+  const playerFaceVert = [];
+  const monsterFaceVert = [];
+  const leftEyeVert = [];
+  const rightEyeVert = [];
+  const coinVert = [];
 
   // this for loops pushes all the verticies for all the circles in the game
   let index;
   for (index = -350; index < 351; index++) {
     num = index / 100;
-    playerFaceVert.push(Math.cos(num) / 10);
-    playerFaceVert.push(Math.sin(num) / 10);
-    playerFaceVert.push(0);
 
-    monsterFaceVert.push(Math.cos(num) / 10);
-    monsterFaceVert.push(Math.sin(num) / 10);
-    monsterFaceVert.push(0);
-
-    leftEyeVert.push(Math.cos(num) / 50 - 0.04);
-    leftEyeVert.push(Math.sin(num) / 50 + 0.04);
-    leftEyeVert.push(0);
-
-    rightEyeVert.push(Math.cos(num) / 50 + 0.04);
-    rightEyeVert.push(Math.sin(num) / 50 + 0.04);
-    rightEyeVert.push(0);
-
-    coinVert.push(Math.cos(num) / 10);
-    coinVert.push(Math.sin(num) / 10);
-    coinVert.push(0);
+    playerFaceVert.push(Math.cos(num) / 10, Math.sin(num) / 10, 0);
+    monsterFaceVert.push(Math.cos(num) / 10, Math.sin(num) / 10, 0);
+    leftEyeVert.push(Math.cos(num) / 50 - 0.04, Math.sin(num) / 50 + 0.04, 0);
+    rightEyeVert.push(Math.cos(num) / 50 + 0.04, Math.sin(num) / 50 + 0.04, 0);
+    coinVert.push(Math.cos(num) / 10, Math.sin(num) / 10, 0);
   }
 
-  let smileVert = [];
-  let frownVert = [];
+  const smileVert = [];
+  const frownVert = [];
   // this for loops creates all the verticies for the smile/frown
   for (index = -310; index < 0; index++) {
     num = index / 100;
-    smileVert.push(Math.cos(num) / 15);
-    smileVert.push(Math.sin(num) / 15);
-    smileVert.push(0);
+    smileVert.push(Math.cos(num) / 15, Math.sin(num) / 15, 0);
 
     num = -num;
-    frownVert.push(Math.cos(num) / 15);
-    frownVert.push(Math.sin(num) / 15 - 0.06);
-    frownVert.push(0);
+    frownVert.push(Math.cos(num) / 15, Math.sin(num) / 15 - 0.06, 0);
   }
 
   // this creates all the grid verticies
-  let gridVert = []; //array to hold vertex positions
+  const gridVert = []; //array to hold vertex positions
   const gridLimit = 0.9;
   let xPos = -gridLimit;
   let yPos = -gridLimit;
   const cellSize = 0.2;
   const gridSize = 22;
   for (i = 0; i < gridSize; i++) {
-    gridVert.push(xPos);
-    gridVert.push(yPos);
-    gridVert.push(0);
-    gridVert.push(xPos);
-    gridVert.push(-yPos);
-    gridVert.push(0);
+    gridVert.push(xPos, yPos, 0);
+    gridVert.push(xPos, -yPos, 0);
     xPos = xPos + cellSize;
   }
   xPos = gridLimit;
   for (i = 0; i < gridSize; i++) {
-    gridVert.push(xPos);
-    gridVert.push(yPos);
-    gridVert.push(0);
-    gridVert.push(-xPos);
-    gridVert.push(yPos);
-    gridVert.push(0);
+    gridVert.push(xPos, yPos, 0);
+    gridVert.push(-xPos, yPos, 0);
     yPos = yPos + cellSize;
   }
 
-  let winTextVert = [
+  const winTextVert = [
     // W
     ...[
       ...[-0.5, 0.5, 0],
@@ -180,25 +155,22 @@ function initBuffers() {
       ...[-0.1, 0.5, 0],
     ],
     // I
-    ...[
-      ...[0, 0.5, 0],
-      ...[0, 0.3, 0],
-    ],
+    ...[...[0, 0.5, 0], ...[0, 0.3, 0]],
     // N
     ...[
-      ...[0.1, 0.3, 0], 
-      ...[0.1, 0.5, 0], 
-
-      ...[0.3, 0.3, 0], 
+      ...[0.1, 0.3, 0],
       ...[0.1, 0.5, 0],
-      
-      ...[0.3, 0.3, 0], 
+
+      ...[0.3, 0.3, 0],
+      ...[0.1, 0.5, 0],
+
+      ...[0.3, 0.3, 0],
       ...[0.3, 0.5, 0],
     ],
   ];
 
   // need to modify vertices to display lose text.
-  let loseTextVert = [
+  const loseTextVert = [
     //L
     ...[
       ...[-0.3, 0.5, 0],
@@ -214,43 +186,43 @@ function initBuffers() {
       ...[-0.1, 0.5, 0],
       ...[0, 0.5, 0],
 
-      ...[-0.1, 0.3, 0], 
+      ...[-0.1, 0.3, 0],
       ...[-0.2, 0.3, 0],
 
-      ...[0, 0.5, 0], 
+      ...[0, 0.5, 0],
       ...[-0.1, 0.3, 0],
     ],
     //S
     ...[
-      ...[0, 0.3, 0], 
+      ...[0, 0.3, 0],
       ...[0.1, 0.3, 0],
 
       ...[0.1, 0.3, 0],
       ...[0.15, 0.4, 0],
 
       ...[0.05, 0.4, 0],
-      ...[0.1, 0.5, 0], 
+      ...[0.1, 0.5, 0],
 
       ...[0.05, 0.4, 0],
       ...[0.15, 0.4, 0],
 
-      ...[0.1, 0.5, 0], 
+      ...[0.1, 0.5, 0],
       ...[0.2, 0.5, 0],
     ],
     // //E
     ...[
-    ...[0.4, 0.5, 0],
-    ...[0.3, 0.5, 0],
+      ...[0.4, 0.5, 0],
+      ...[0.3, 0.5, 0],
 
-    ...[0.25, 0.4, 0], 
-    ...[0.35, 0.4, 0],
+      ...[0.25, 0.4, 0],
+      ...[0.35, 0.4, 0],
 
-    ...[0.3, 0.5, 0],
-    ...[0.2, 0.3, 0],
+      ...[0.3, 0.5, 0],
+      ...[0.2, 0.3, 0],
 
-    ...[0.3, 0.3, 0], 
-    ...[0.2, 0.3, 0],
-        ],
+      ...[0.3, 0.3, 0],
+      ...[0.2, 0.3, 0],
+    ],
   ];
 
   // these store the number of verticies to be used later on
@@ -566,17 +538,17 @@ class Game {
 
     // Generate random position for three walls.
     this.walls = [];
-    // for (let i = 0; i < 3; i++) {
-    //   while (true) {
-    //     const potentialRow = Math.floor(Math.random() * this.rows);
-    //     const potentialCol = Math.floor(Math.random() * this.cols);
-    //     const potentialPos = new Position(potentialRow, potentialCol);
-    //     if (!this.occupiedByToken(potentialPos)) {
-    //       this.walls.push(new Token(TokenType.WALL, potentialPos));
-    //       break;
-    //     }
-    //   }
-    // }
+    for (let i = 0; i < 3; i++) {
+      while (true) {
+        const potentialRow = Math.floor(Math.random() * this.rows);
+        const potentialCol = Math.floor(Math.random() * this.cols);
+        const potentialPos = new Position(potentialRow, potentialCol);
+        if (!this.occupiedByToken(potentialPos)) {
+          this.walls.push(new Token(TokenType.WALL, potentialPos));
+          break;
+        }
+      }
+    }
   }
 
   updatePlayerPosition(rowOffset, colOffset) {
