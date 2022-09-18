@@ -1,6 +1,6 @@
 //FileName:		model.js
 //Programmer:	Dan Cliburn, Dean S., Chris C., Chris S.
-//Date:			8/11/2020
+//Date:			  8/18/2020
 //Purpose:		This file defines the code for our WebGL 2 model
 //The "model" is all of the WebGL2 code that draws our graphics scene
 
@@ -133,22 +133,22 @@ function initBuffers() {
     ...[-0.1, 0.05, 0],
   ];
 
-  // this creates all the grid verticies
-  const gridVert = []; //array to hold vertex positions
+  // this creates all the grid vertices
+  const gridVert = [];
   const gridLimit = 0.9;
-  let xPos = -gridLimit;
-  let yPos = -gridLimit;
   const cellSize = 0.2;
-  const gridSize = 22;
-  for (i = 0; i < gridSize; i++) {
-    gridVert.push(xPos, yPos, 0);
-    gridVert.push(xPos, -yPos, 0);
+  // Draw vertical lines
+  let xPos = -gridLimit;
+  for (i = 0; i <= gameModel.cols; i++) {
+    gridVert.push(xPos, gridLimit, 0);
+    gridVert.push(xPos, -gridLimit, 0);
     xPos = xPos + cellSize;
   }
-  xPos = gridLimit;
-  for (i = 0; i < gridSize; i++) {
-    gridVert.push(xPos, yPos, 0);
-    gridVert.push(-xPos, yPos, 0);
+  // Draw horizontal lines
+  let yPos = -gridLimit;
+  for (i = 0; i <= gameModel.rows; i++) {
+    gridVert.push(gridLimit, yPos, 0);
+    gridVert.push(-gridLimit, yPos, 0);
     yPos = yPos + cellSize;
   }
 
@@ -182,7 +182,6 @@ function initBuffers() {
     ],
   ];
 
-  // need to modify vertices to display lose text.
   const loseTextVert = [
     //L
     ...[
@@ -238,7 +237,7 @@ function initBuffers() {
     ],
   ];
 
-  // these store the number of verticies to be used later on
+  // these store the number of vertices to be used later on
   playerFaceVertCount = playerFaceVert.length / 3;
   monsterFaceVertCount = monsterFaceVert.length / 3;
   leftEyeVertCount = leftEyeVert.length / 3;
@@ -251,7 +250,7 @@ function initBuffers() {
   winTextVertCount = winTextVert.length / 3;
   loseTextVertCount = loseTextVert.length / 3;
 
-  //Setting up the VBO for the vertex positions
+  //Setting up the VBOs
   playerFaceVertBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, playerFaceVertBuffer);
   gl.bufferData(
@@ -322,22 +321,20 @@ function initBuffers() {
 
 //We call drawModel to render to our canvas
 function drawModel() {
-  let [offsetX, offsetY] = [0, 0];
-  gl.uniform1f(offsetXLoc, offsetX);
-  gl.uniform1f(offsetYLoc, offsetY);
-
   //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  let [offsetX, offsetY] = [0, 0];
+  gl.uniform1f(offsetXLoc, offsetX);
+  gl.uniform1f(offsetYLoc, offsetY);
 
   // Render the grid
   gl.bindBuffer(gl.ARRAY_BUFFER, gridVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 0, 0.7, 0);
-  gl.drawArrays(gl.LINES, 0, gridVertCount); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.LINES, 0, gridVertCount);
 
-  // This section renders the coins
-
+  // Render the coins
   for (const coin of gameModel.coins) {
     // Offset
     [offsetX, offsetY] = coin.position.getXAndYOffset(
@@ -354,8 +351,7 @@ function drawModel() {
     gl.drawArrays(gl.TRIANGLE_FAN, 0, coinVertCount);
   }
 
-  // Thi section renders the walls
-
+  // Render the walls
   for (const wall of gameModel.walls) {
     // Offset
     [offsetX, offsetY] = wall.position.getXAndYOffset(
@@ -372,7 +368,7 @@ function drawModel() {
     gl.drawArrays(gl.TRIANGLE_FAN, 0, wallVertCount);
   }
 
-  // This section below renders the player/hero
+  // Render the player token
   // Offset
   [offsetX, offsetY] = gameModel.player.position.getXAndYOffset(
     gameModel.rows,
@@ -402,7 +398,7 @@ function drawModel() {
   gl.vertexAttrib3f(1, 0, 0, 0);
   gl.drawArrays(gl.TRIANGLE_FAN, 0, rightEyeVertCount);
 
-  // This section below renders the monster
+  // Render the monster token
   // Offset
   [offsetX, offsetY] = gameModel.monster.position.getXAndYOffset(
     gameModel.rows,
@@ -464,7 +460,7 @@ function drawModel() {
   gl.bindVertexArray(null);
 }
 
-//return the WebGL context to the caller
+//returns the WebGL context to the caller
 function initModel(view) {
   gl = getGLContext(view);
   if (gl) {
@@ -490,6 +486,7 @@ function getGameModel() {
   return gameModel;
 }
 
+// These classes below represent the internal state of the game.
 const TokenType = {
   PLAYER: "PLAYER",
   MONSTER: "MONSTER",
@@ -561,7 +558,7 @@ class Game {
     this.coins = [];
     this.walls = [];
 
-    // Generate random position for four coins
+    // Generate random positions for coins
     for (let i = 0; i < 4; i++) {
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
@@ -574,8 +571,9 @@ class Game {
       }
     }
 
-    // Generate random position for three walls.
+    // Generate random positions for walls.
     this.walls = [];
+    const wallCount = Math.floor(Math.random() * 5) + 5;
 
     // Helper function that returns if a player cannot reach a coin given the current wall/coin layout.
     const isCoinBlocked = () => {
@@ -594,10 +592,7 @@ class Game {
       const reachableCoinCount = (i, j) => {
         const curPos = new Position(i, j);
         if (
-          i < 0 ||
-          i >= this.rows ||
-          j < 0 ||
-          j >= this.cols ||
+          this.outOfBounds(curPos) ||
           visited[i][j] ||
           this.walls.some((wall) => wall.position.equals(curPos))
         ) {
@@ -618,8 +613,8 @@ class Game {
       );
     };
 
-    const wallCount = Math.floor(Math.random() * 5) + 5;
     for (let i = 0; i < wallCount; i++) {
+      // Loop until a wall is placed in a valid position.
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
         const potentialCol = Math.floor(Math.random() * this.cols);
