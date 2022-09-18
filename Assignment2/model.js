@@ -7,32 +7,31 @@
 //these variables can be accessed in any function
 let gl;
 let program;
-let offsetXLoc, offsetYLoc; //These are used to access uniform variables in the shaders
-let vertexBuffer;
-let vertex1Buffer;
-let vertex2Buffer;
-let vertex3Buffer;
-let vertex4Buffer;
-let vertex5Buffer;
-let vertex6Buffer;
-let vertex7Buffer;
-let vertex8Buffer;
-let winBuffer;
-let loseBuffer;
-
-let numVertices;
-let numVertices1;
-let numVertices2;
-let numVertices3;
-let numVertices4;
-let numVertices5;
-let numVertices6;
-let numVertices7;
-let numVertices8;
-let gridNumVertices;
-let winNumVertices;
-let loseNumVertices;
 let gameModel;
+//These are used to access uniform variables in the shaders
+let offsetXLoc, offsetYLoc;
+// Vertex buffers
+let playerFaceVertBuffer,
+  monsterFaceVertBuffer,
+  leftEyeVertBuffer,
+  rightEyeVertBuffer,
+  smileVertBuffer,
+  frownVertBuffer,
+  coinVertBuffer,
+  gridVertBuffer,
+  winTextVertBuffer,
+  loseTextVertBuffer;
+// Vertex counts
+let playerFaceVertCount,
+  monsterFaceVertCount,
+  leftEyeVertCount,
+  rightEyeVertCount,
+  smileVertCount,
+  frownVertCount,
+  coinVertCount,
+  gridVertCount,
+  winTextVertCount,
+  loseTextVertCount;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -92,130 +91,59 @@ function initProgram() {
 //Set up the buffers we need to use for rendering
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
-  // yellow circle
-  let vertices = [];
-  let colors = [];
-
-  // red smile
-  let vertices1 = [];
-  let colors1 = [];
-
-  // right eye
-  let vertices2 = [];
-  let colors2 = [];
-
-  // left eye
-  let vertices3 = [];
-  let colors3 = [];
-
-  //red frown
-  let vertices4 = [];
-  let colors4 = [];
-
-  // red circle
-  let vertices5 = [];
-  let colors5 = [];
-
-  // right eye mad
-  let vertices6 = [];
-  let colors6 = [];
-
-  //left eye mad
-  let vertices7 = [];
-  let colors7 = [];
-
-  //coin 1
-  let vertices8 = [];
-  let colors8 = [];
-
-  //coin 2
-  let vertices9 = [];
-  let colors9 = [];
-
-  //coin 3
-  let vertices10 = [];
-  let colors10 = [];
-
-  //coin 4
-  let vertices11 = [];
-  let colors11 = [];
+  let playerFaceVert = [];
+  let monsterFaceVert = [];
+  let leftEyeVert = [];
+  let rightEyeVert = [];
+  let coinVert = [];
 
   // this for loops pushes all the verticies for all the circles in the game
   let index;
   for (index = -350; index < 351; index++) {
     num = index / 100;
-    vertices.push(Math.cos(num) / 10);
-    vertices.push(Math.sin(num) / 10);
-    vertices.push(0);
+    playerFaceVert.push(Math.cos(num) / 10);
+    playerFaceVert.push(Math.sin(num) / 10);
+    playerFaceVert.push(0);
 
-    vertices5.push(Math.cos(num) / 10);
-    vertices5.push(Math.sin(num) / 10);
-    vertices5.push(0);
+    monsterFaceVert.push(Math.cos(num) / 10);
+    monsterFaceVert.push(Math.sin(num) / 10);
+    monsterFaceVert.push(0);
 
-    vertices2.push(Math.cos(num) / 50 + 0.04);
-    vertices2.push(Math.sin(num) / 50 + 0.04);
-    vertices2.push(0);
+    leftEyeVert.push(Math.cos(num) / 50 - 0.04);
+    leftEyeVert.push(Math.sin(num) / 50 + 0.04);
+    leftEyeVert.push(0);
 
-    vertices6.push(Math.cos(num) / 50 + 0.04);
-    vertices6.push(Math.sin(num) / 50 + 0.04);
-    vertices6.push(0);
+    rightEyeVert.push(Math.cos(num) / 50 + 0.04);
+    rightEyeVert.push(Math.sin(num) / 50 + 0.04);
+    rightEyeVert.push(0);
 
-    vertices3.push(Math.cos(num) / 50 - 0.04);
-    vertices3.push(Math.sin(num) / 50 + 0.04);
-    vertices3.push(0);
-
-    vertices7.push(Math.cos(num) / 50 - 0.04);
-    vertices7.push(Math.sin(num) / 50 + 0.04);
-    vertices7.push(0);
-
-    // Coin
-    num = index / 100;
-    vertices8.push(Math.cos(num) / 10);
-    vertices8.push(Math.sin(num) / 10);
-    vertices8.push(0);
-  }
-  // this for loops pushes the colors for all the circles
-  for (index = 0; index < 701; index++) {
-    colors.push([1.0, 1.0, 0.0]);
-    colors5.push([1.0, 0.0, 0.0]);
-
-    colors2.push([0.0, 0.0, 0.0]);
-    colors6.push([0.0, 0.0, 0.0]);
-
-    colors3.push([0.0, 0.0, 0.0]);
-    colors7.push([0.0, 0.0, 0.0]);
-
-    // Coin
-    colors8.push([1.0, 0.7, 0.0]);
+    coinVert.push(Math.cos(num) / 10);
+    coinVert.push(Math.sin(num) / 10);
+    coinVert.push(0);
   }
 
+  let smileVert = [];
+  let frownVert = [];
   // this for loops creates all the verticies for the smile/frown
   for (index = -310; index < 0; index++) {
     num = index / 100;
-    vertices1.push(Math.cos(num) / 15);
-    vertices1.push(Math.sin(num) / 15);
-    vertices1.push(0);
+    smileVert.push(Math.cos(num) / 15);
+    smileVert.push(Math.sin(num) / 15);
+    smileVert.push(0);
 
     num = -num;
-    vertices4.push(Math.cos(num) / 15);
-    vertices4.push(Math.sin(num) / 15 - 0.06);
-    vertices4.push(0);
-  }
-  // pushes color to the frown/smile
-  for (index = 0; index < 310; index++) {
-    colors1.push([1.0, 0.0, 0.0]);
-    colors4.push([0.0, 0.0, 0.0]);
+    frownVert.push(Math.cos(num) / 15);
+    frownVert.push(Math.sin(num) / 15 - 0.06);
+    frownVert.push(0);
   }
 
   // this creates all the grid verticies
-
   let gridVert = []; //array to hold vertex positions
-  let gridLimit = 0.9;
+  const gridLimit = 0.9;
   let xPos = -gridLimit;
   let yPos = -gridLimit;
-  let cellSize = 0.2;
-  let gridSize = 22;
-  gridNumVertices = gridSize * 4;
+  const cellSize = 0.2;
+  const gridSize = 22;
   for (i = 0; i < gridSize; i++) {
     gridVert.push(xPos);
     gridVert.push(yPos);
@@ -236,7 +164,8 @@ function initBuffers() {
     yPos = yPos + cellSize;
   }
 
-  let winText = [
+  let winTextVert = [
+    // W
     ...[
       ...[-0.5, 0.5, 0],
       ...[-0.4, 0.3, 0],
@@ -244,14 +173,14 @@ function initBuffers() {
       ...[-0.2, 0.3, 0],
       ...[-0.1, 0.5, 0],
     ],
+    // I
     ...[...[0.0, 0.5, 0], ...[0, 0.3, 0]],
+    // N
     ...[...[0.1, 0.3, 0], ...[0.1, 0.5, 0], ...[0.3, 0.3, 0], ...[0.3, 0.5, 0]],
   ];
-  winNumVertices = 11;
 
-  // need to modify vertiies to display lose text.
-
-  let loseText = [
+  // need to modify vertices to display lose text.
+  let loseTextVert = [
     ...[
       ...[-0.5, 0.5, 0],
       ...[-0.5, 0, 0],
@@ -271,68 +200,75 @@ function initBuffers() {
       ...[0.1, 0, 0],
     ],
   ];
-  loseNumVertices = 17;
 
   // these store the number of verticies to be used later on
-
-  numVertices = vertices.length / 3;
-  numVertices1 = vertices1.length / 3;
-  numVertices2 = vertices2.length / 3;
-  numVertices3 = vertices3.length / 3;
-  numVertices4 = vertices4.length / 3;
-  numVertices5 = vertices5.length / 3;
-  numVertices6 = vertices6.length / 3;
-  numVertices7 = vertices7.length / 3;
-  numVertices8 = vertices8.length / 3;
+  playerFaceVertCount = playerFaceVert.length / 3;
+  monsterFaceVertCount = monsterFaceVert.length / 3;
+  leftEyeVertCount = leftEyeVert.length / 3;
+  rightEyeVertCount = rightEyeVert.length / 3;
+  smileVertCount = smileVert.length / 3;
+  frownVertCount = frownVert.length / 3;
+  coinVertCount = coinVert.length / 3;
+  gridVertCount = gridVert.length / 3;
+  winTextVertCount = winTextVert.length / 3;
+  loseTextVertCount = loseTextVert.length / 3;
 
   //Setting up the VBO for the vertex positions
-  vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  playerFaceVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, playerFaceVertBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(playerFaceVert),
+    gl.STATIC_DRAW
+  );
 
-  vertex1Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex1Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices1), gl.STATIC_DRAW);
+  monsterFaceVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, monsterFaceVertBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(monsterFaceVert),
+    gl.STATIC_DRAW
+  );
 
-  vertex2Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex2Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices2), gl.STATIC_DRAW);
+  leftEyeVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, leftEyeVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(leftEyeVert), gl.STATIC_DRAW);
 
-  vertex3Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex3Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices3), gl.STATIC_DRAW);
+  rightEyeVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, rightEyeVertBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(rightEyeVert),
+    gl.STATIC_DRAW
+  );
 
-  vertex4Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex4Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices4), gl.STATIC_DRAW);
+  smileVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, smileVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(smileVert), gl.STATIC_DRAW);
 
-  vertex5Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex5Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices5), gl.STATIC_DRAW);
+  frownVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, frownVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(frownVert), gl.STATIC_DRAW);
 
-  vertex6Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex6Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices6), gl.STATIC_DRAW);
+  coinVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, coinVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coinVert), gl.STATIC_DRAW);
 
-  vertex7Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex7Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices7), gl.STATIC_DRAW);
-
-  vertex8Buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex8Buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices8), gl.STATIC_DRAW);
-
-  gridBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+  gridVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, gridVertBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridVert), gl.STATIC_DRAW);
 
-  winBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, winBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(winText), gl.STATIC_DRAW);
+  winTextVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, winTextVertBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(winTextVert), gl.STATIC_DRAW);
 
-  loseBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, loseBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(loseText), gl.STATIC_DRAW);
+  loseTextVertBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, loseTextVertBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(loseTextVert),
+    gl.STATIC_DRAW
+  );
 
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
@@ -353,35 +289,14 @@ function drawModel() {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
   // Render the grid
-  gl.bindBuffer(gl.ARRAY_BUFFER, gridBuffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gridVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 0, 0.7, 0);
-  gl.drawArrays(gl.LINES, 0, gridNumVertices); //render all of the vertices (NumVertices)
-
-  // Render the 'Win' text
-  if (gameModel.gameState === GameState.PLAYER_WIN) {
-    gl.uniform1f(offsetXLoc, 0); //send the value of xOffset to the shaders
-    gl.uniform1f(offsetYLoc, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, winBuffer);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-    gl.vertexAttrib3f(1, 1, 1, 0);
-    gl.drawArrays(gl.LINE_STRIP, 0, winNumVertices); //render all of the vertices (NumVertices
-  }
-
-  // Render the 'Lose' text
-  if (gameModel.gameState === GameState.MONSTER_WIN) {
-    gl.uniform1f(offsetXLoc, 0); //send the value of xOffset to the shaders
-    gl.uniform1f(offsetYLoc, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, loseBuffer);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-    gl.vertexAttrib3f(1, 1, 0, 0);
-    gl.drawArrays(gl.LINE_STRIP, 0, loseNumVertices); //render all of the vertices (NumVertices
-  }
+  gl.drawArrays(gl.LINES, 0, gridVertCount); //render all of the vertices (NumVertices)
 
   // This section renders the coins
   for (const coin of gameModel.coins) {
+    // Offset
     [offsetX, offsetY] = coin.position.getXAndYOffset(
       gameModel.rows,
       gameModel.cols
@@ -389,13 +304,15 @@ function drawModel() {
     gl.uniform1f(offsetXLoc, offsetX);
     gl.uniform1f(offsetYLoc, offsetY);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertex8Buffer);
+    // Draw
+    gl.bindBuffer(gl.ARRAY_BUFFER, coinVertBuffer);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.vertexAttrib3f(1, 1, 0.7, 0);
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices8);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, coinVertCount);
   }
 
   // This section below renders the player/hero
+  // Offset
   [offsetX, offsetY] = gameModel.player.position.getXAndYOffset(
     gameModel.rows,
     gameModel.cols
@@ -403,27 +320,29 @@ function drawModel() {
   gl.uniform1f(offsetXLoc, offsetX); //send the value of xOffset to the shaders
   gl.uniform1f(offsetYLoc, offsetY); //send the value of yOffset to the shaders
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  // Draw
+  gl.bindBuffer(gl.ARRAY_BUFFER, playerFaceVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 1, 1, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, playerFaceVertCount);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex1Buffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, smileVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 1, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices1); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, smileVertCount);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex2Buffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, leftEyeVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 0, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices2); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, leftEyeVertCount);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex3Buffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, rightEyeVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 0, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices3); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, rightEyeVertCount);
 
   // This section below renders the monster
+  // Offset
   [offsetX, offsetY] = gameModel.monster.position.getXAndYOffset(
     gameModel.rows,
     gameModel.cols
@@ -431,27 +350,54 @@ function drawModel() {
   gl.uniform1f(offsetXLoc, offsetX); //send the value of xOffset to the shaders
   gl.uniform1f(offsetYLoc, offsetY); //send the value of yOffset to the shaders
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex5Buffer);
+  // Draw
+  gl.bindBuffer(gl.ARRAY_BUFFER, monsterFaceVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 1, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices5);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, monsterFaceVertCount);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex4Buffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, frownVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.vertexAttrib3f(1, 0, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices4); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, frownVertCount);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex6Buffer);
-  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(0);
-  gl.vertexAttrib3f(1, 0, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices6); //render all of the vertices (NumVertices)
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertex7Buffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, leftEyeVertBuffer);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0);
   gl.vertexAttrib3f(1, 0, 0, 0);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, numVertices7); //render all of the vertices (NumVertices)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, leftEyeVertCount);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, rightEyeVertBuffer);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttrib3f(1, 0, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, rightEyeVertCount);
+
+  // Render the 'Win' text
+  if (gameModel.gameState === GameState.PLAYER_WIN) {
+    // Offset
+    gl.uniform1f(offsetXLoc, 0);
+    gl.uniform1f(offsetYLoc, 0);
+
+    // Draw
+    gl.bindBuffer(gl.ARRAY_BUFFER, winTextVertBuffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 1, 1, 0);
+    gl.drawArrays(gl.LINE_STRIP, 0, winTextVertCount);
+  }
+
+  // Render the 'Lose' text
+  if (gameModel.gameState === GameState.MONSTER_WIN) {
+    // Offset
+    gl.uniform1f(offsetXLoc, 0);
+    gl.uniform1f(offsetYLoc, 0);
+
+    // Draw
+    gl.bindBuffer(gl.ARRAY_BUFFER, loseTextVertBuffer);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttrib3f(1, 1, 0, 0);
+    gl.drawArrays(gl.LINE_STRIP, 0, loseTextVertCount);
+  }
 
   //Clean
   gl.bindVertexArray(null);
