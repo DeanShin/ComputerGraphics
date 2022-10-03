@@ -8,10 +8,12 @@
 let gl;
 let program;
 let VAO, pyramidVPB, pyramidIB;
-let lightX, lightY; //will be used to move the light
+let pointLightX, pointLightY; //will be used to move the point light
 let globalAmbientLightLoc,
-  lightColorLoc,
-  lightPosLoc,
+  pointLightColorLoc,
+  pointLightPosLoc,
+  directionalLightColorLoc,
+  directionalLightPosLoc,
   constantAttenLoc,
   linearAttenLoc,
   quadraticAttenLoc;
@@ -105,21 +107,34 @@ function initBuffers() {
 function initLights() {
   //find uniform variable locations
   globalAmbientLightLoc = gl.getUniformLocation(program, "globalAmbientLight");
-  lightColorLoc = gl.getUniformLocation(program, "light_color");
-  lightPosLoc = gl.getUniformLocation(program, "light_position");
+  pointLightColorLoc = gl.getUniformLocation(program, "point_light_color");
+  pointLightPosLoc = gl.getUniformLocation(program, "point_light_position");
+  directionalLightColorLoc = gl.getUniformLocation(
+    program,
+    "directional_light_color"
+  );
+  directionalLightPosLoc = gl.getUniformLocation(
+    program,
+    "directional_light_position"
+  );
   constantAttenLoc = gl.getUniformLocation(program, "constantAttenuation");
   linearAttenLoc = gl.getUniformLocation(program, "linearAttenuation");
   quadraticAttenLoc = gl.getUniformLocation(program, "quadraticAttenuation");
 
   //set up the light for the scene
-  lightX = 0.0;
-  lightY = 0.0;
-  //TODO: change the global ambient light value
+  pointLightX = 0.0;
+  pointLightY = 0.0;
   gl.uniform3f(globalAmbientLightLoc, 0.2, 0.2, 0.2); //minimum light level in the scene
-  //TODO: change the color of the light to red: (1.0, 0.0, 0.0, 1.0)
-  gl.uniform4f(lightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the light (in this case it is white)
-  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
-  //TODO: change the attenuation coefficients
+  gl.uniform4f(pointLightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the point light
+  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //point light since w = 1
+  gl.uniform4f(directionalLightColorLoc, 1.0, 0.0, 0.0, 1.0); //color of the directional light
+  gl.uniform4f(
+    directionalLightPosLoc,
+    0.0,
+    0.0,
+    -1.0,
+    0.0
+  ); // directional light since w = 1
   gl.uniform1f(constantAttenLoc, 1.0); //these settings specify no light attenuation
   gl.uniform1f(linearAttenLoc, 0.2);
   gl.uniform1f(quadraticAttenLoc, 0.5);
@@ -211,17 +226,17 @@ function initModel(view) {
 }
 
 function updateModelX(offset) {
-  lightX = lightX + offset;
-  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+  pointLightX = pointLightX + offset;
+  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //positional light since w = 1
 }
 
 function updateModelY(offset) {
-  lightY = lightY + offset;
-  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+  pointLightY = pointLightY + offset;
+  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //positional light since w = 1
 }
 
 function resetModel() {
-  lightX = 0;
-  lightY = 0;
-  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+  pointLightX = 0;
+  pointLightY = 0;
+  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //positional light since w = 1
 }
