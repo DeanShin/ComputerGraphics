@@ -1,15 +1,20 @@
 //FileName:		model.js
-//Programmer: Dan Cliburn & Dean Shin & Chris C. & Chris S.
-//Date:       9/30/2022
+//Programmer: Dan Cliburn, Dean S, Chris C, Chris S
+//Date:       10/03/2020
 //Purpose:		This file defines the code for our WebGL 2 model
 //The "model" is all of the WebGL2 code that draws our graphics scene
 
-//these variables can be accessed in any function
+//These variables can be accessed in any function
 let gl;
 let program;
-let vertexBuffer;
-let vertexColorBuffer;
-let triangleCount;
+let VAO, pyramidVPB, pyramidIB;
+let lightX, lightY; //will be used to move the light
+let globalAmbientLightLoc,
+  lightColorLoc,
+  lightPosLoc,
+  constantAttenLoc,
+  linearAttenLoc,
+  quadraticAttenLoc;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -69,87 +74,55 @@ function initProgram() {
 //Set up the buffers we need to use for rendering
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
-  //array data for the triangles
-  const vertices = [
-    // Leaves
-    ...[...[0, 0.35, 0], ...[-0.65, -0.25, 0], ...[0.65, -0.25, 0]],
-    ...[...[0, 0.55, 0], ...[-0.5, 0.1, 0], ...[0.5, 0.1, 0]],
-    ...[...[0, 0.7, 0], ...[-0.35, 0.4, 0], ...[0.35, 0.4, 0]],
-    // Star
-    ...[...[0, 0.8, 0], ...[-0.02, 0.7, 0.0], ...[0.02, 0.7, 0.0]],
-    ...[...[-0.1, 0.7, 0], ...[0, 0.68, 0.0], ...[0, 0.72, 0.0]],
-    ...[...[0, 0.6, 0], ...[0.02, 0.7, 0.0], ...[-0.02, 0.7, 0.0]],
-    ...[...[0.1, 0.7, 0], ...[0, 0.72, 0.0], ...[0, 0.68, 0.0]],
-    // Trunk
-    ...[...[-0.3, -0.25, 0], ...[-0.3, -1.0, 0], ...[0.3, -1, 0]],
-    ...[...[-0.3, -0.25, 0], ...[0.3, -1, 0], ...[0.3, -0.25, 0]],
-    // Ornaments
-    ...[...[0.15, -0.05, 0], ...[0.2, 0, 0], ...[0.1, 0, 0]],
-    ...[...[0.15, 0.05, 0], ...[0.1, 0, 0], ...[0.2, 0, 0]],
-    ...[...[0.1, 0.45, 0], ...[0.15, 0.5, 0], ...[0.05, 0.5, 0]],
-    ...[...[0.1, 0.55, 0], ...[0.05, 0.5, 0], ...[0.15, 0.5, 0]],
-    ...[...[-0.15, 0.25, 0], ...[-0.1, 0.2, 0], ...[-0.2, 0.2, 0]],
-    ...[...[-0.15, 0.15, 0], ...[-0.2, 0.2, 0], ...[-0.1, 0.2, 0]],
-    ...[...[-0.25, -0.1, 0], ...[-0.2, -0.15, 0], ...[-0.3, -0.15, 0]],
-    ...[...[-0.25, -0.2, 0], ...[-0.3, -0.15, 0], ...[-0.2, -0.15, 0]],
-    // Birdhouse
-    ...[...[-0.2, -0.5, 0], ...[-0.2, -0.75, 0], ...[0.2, -0.75, 0]],
-    ...[...[-0.2, -0.5, 0], ...[0.2, -0.75, 0], ...[0.2, -0.5, 0]],
-    ...[...[-0.1, -0.63, 0], ...[0, -0.7, 0], ...[0, -0.55, 0]],
-    ...[...[0.1, -0.63, 0], ...[0, -0.7, 0], ...[0, -0.55, 0]],
-  ];
-  const colors = [
-    // Leaves
-    ...[...[0.0, 0.8, 0.0], ...[0.0, 0.4, 0.2], ...[0.0, 0.4, 0.2]],
-    ...[...[0.0, 0.8, 0.0], ...[0.0, 0.4, 0.2], ...[0.0, 0.4, 0.2]],
-    ...[...[0.0, 0.8, 0.0], ...[0.0, 0.4, 0.2], ...[0.0, 0.4, 0.2]],
-    // Star
-    ...[...[0.75, 0.75, 0], ...[0.75, 0.75, 0], ...[0.75, 0.75, 0]],
-    ...[...[0.75, 0.75, 0], ...[0.75, 0.75, 0], ...[0.75, 0.75, 0]],
-    ...[...[0.75, 0.75, 0], ...[0.75, 0.75, 0], ...[0.75, 0.75, 0]],
-    ...[...[0.75, 0.75, 0], ...[0.75, 0.75, 0], ...[0.75, 0.75, 0]],
-    // Trunk
-    ...[
-      ...[0.2294117647, 0.11529411764, 0],
-      ...[0.2294117647, 0.11529411764, 0],
-      ...[0.2294117647, 0.11529411764, 0],
-    ],
-    ...[
-      ...[0.2294117647, 0.11529411764, 0],
-      ...[0.2294117647, 0.11529411764, 0],
-      ...[0.2294117647, 0.11529411764, 0],
-    ],
-    // Ornaments
-    ...[...[1.0, 0, 0], ...[1.0, 0, 0], ...[1.0, 0, 0]],
-    ...[...[1.0, 0, 0], ...[1.0, 0, 0], ...[1.0, 0, 0]],
-    ...[...[0, 1.0, 0], ...[0, 1.0, 0], ...[0, 1.0, 0]],
-    ...[...[0, 1.0, 0], ...[0, 1.0, 0], ...[0, 1.0, 0]],
-    ...[...[0, 0, 1.0], ...[0, 0, 1.0], ...[0, 0, 1.0]],
-    ...[...[0, 0, 1.0], ...[0, 0, 1.0], ...[0, 0, 1.0]],
-    ...[...[1.0, 0, 1.0], ...[1.0, 0, 1.0], ...[1.0, 0, 1.0]],
-    ...[...[1.0, 0, 1.0], ...[1.0, 0, 1.0], ...[1.0, 0, 1.0]],
-    // Birdhouse
-    ...[...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1]],
-    ...[...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1]],
-    ...[...[1, 0, 0], ...[1, 0, 0], ...[1, 0, 0]],
-    ...[...[1, 0, 0], ...[1, 0, 0], ...[1, 0, 0]],
+  //Vertex position data for the pyramid
+  const positions = [
+    -0.5, 0.5, 1.0, -0.5, -0.5, 1.0, 0.5, -0.5, 1.0, 0.5, 0.5, 1.0, 0.0, 0.0,
+    0.5,
   ];
 
-  triangleCount = 21;
+  //Set up Vertex Array Object
+  VAO = gl.createVertexArray();
+  gl.bindVertexArray(VAO);
 
-  //Setting up the VBO for the triangle vertex positions
-  vertexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  //Set up the VBO for the pyramid vertex positions
+  pyramidVPB = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVPB);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
 
-  //Setting up the VBO for the triangle vertex colors
-  vertexColorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  //Set up the IBO for the pyramid
+  pyramidIB = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, pyramidIB);
 
   //Clean
+  gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+}
+
+//initialize the lights
+function initLights() {
+  //find uniform variable locations
+  globalAmbientLightLoc = gl.getUniformLocation(program, "globalAmbientLight");
+  lightColorLoc = gl.getUniformLocation(program, "light_color");
+  lightPosLoc = gl.getUniformLocation(program, "light_position");
+  constantAttenLoc = gl.getUniformLocation(program, "constantAttenuation");
+  linearAttenLoc = gl.getUniformLocation(program, "linearAttenuation");
+  quadraticAttenLoc = gl.getUniformLocation(program, "quadraticAttenuation");
+
+  //set up the light for the scene
+  lightX = 0.0;
+  lightY = 0.0;
+  //TODO: change the global ambient light value
+  gl.uniform3f(globalAmbientLightLoc, 0.2, 0.2, 0.2); //minimum light level in the scene
+  //TODO: change the color of the light to red: (1.0, 0.0, 0.0, 1.0)
+  gl.uniform4f(lightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the light (in this case it is white)
+  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+  //TODO: change the attenuation coefficients
+  gl.uniform1f(constantAttenLoc, 1.0); //these settings specify no light attenuation
+  gl.uniform1f(linearAttenLoc, 0.2);
+  gl.uniform1f(quadraticAttenLoc, 0.5);
 }
 
 //We call drawModel to render to our canvas
@@ -159,22 +132,58 @@ function drawModel() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-  //Use the buffers we've constructed - first the vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  // This 0 corresponds to layout (location = 0) in vec4 vPosition;
-  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(0);
+  //Bind the VAO for our pyramid
+  gl.bindVertexArray(VAO);
 
-  //Now the vertex colors
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-  // This 1 corresponds to layout (location = 1) in vec4 vColor;
-  gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(1);
+  //TODO: change the shininess coefficient
+  gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
 
-  //Draw to the scene using triangle primitives
-  gl.drawArrays(gl.TRIANGLES, 0, triangleCount * 3);
+  //Draw the pyramid - side 1
+  const indices1 = [0, 1, 4]; //Indices for side 1. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 1, 0, 0); //use a static vertex attribute (location == 1) to set the color to red
+  gl.vertexAttrib3f(2, -1, 0, -1); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(indices1),
+    gl.DYNAMIC_DRAW
+  );
+  gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
+
+  //Draw the pyramid - side 2
+  const indices2 = [1, 2, 4]; //Indices for side 2. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 0, 1, 0); //use a static vertex attribute (location == 1) to set the color to green
+  gl.vertexAttrib3f(2, 0, -1, -1); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(indices2),
+    gl.DYNAMIC_DRAW
+  );
+  gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
+
+  //Draw the pyramid - side 3
+  const indices3 = [2, 3, 4]; //Indices for side 3. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 0, 0, 1); //use a static vertex attribute (location == 1) to set the color to blue
+  gl.vertexAttrib3f(2, 1, 0, -1); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(indices3),
+    gl.DYNAMIC_DRAW
+  );
+  gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
+
+  //Draw the pyramid - side 4
+  const indices4 = [3, 0, 4]; //Indices for side 4. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 1, 1, 1); //use a static vertex attribute (location == 1) to set the color to white
+  gl.vertexAttrib3f(2, 0, 1, -1); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(indices4),
+    gl.DYNAMIC_DRAW
+  );
+  gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
 
   //Clean
+  gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
@@ -183,14 +192,36 @@ function drawModel() {
 function initModel(view) {
   gl = getGLContext(view);
   if (gl) {
-    gl.clearColor(0.5, 0.5, 1.0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0.0, 0.0, view.width, view.height);
 
     initProgram();
+
+    //SET UP UNIFORM VARIABLES
+    xOffset = 0;
+    yOffset = 0;
+
     initBuffers();
+    initLights();
 
     return gl;
   }
   return null;
+}
+
+function updateModelX(offset) {
+  lightX = lightX + offset;
+  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+}
+
+function updateModelY(offset) {
+  lightY = lightY + offset;
+  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
+}
+
+function resetModel() {
+  lightX = 0;
+  lightY = 0;
+  gl.uniform4f(lightPosLoc, lightX, lightY, -1.0, 1.0); //positional light since w = 1
 }
