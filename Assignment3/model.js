@@ -240,3 +240,11 @@ function resetModel() {
   pointLightY = 0;
   gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //positional light since w = 1
 }
+
+function turnLightOff() {
+  gl.uniform4f(lightColorLoc, 0,0,0,0); //positional light since w = 1
+}
+
+function turnLightOn() {
+  gl.uniform4f(lightColorLoc, 1,1,1,1); //positional light since w = 1
+}

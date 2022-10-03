@@ -38,6 +38,16 @@ function checkKey(event) {
     case 27: {
       resetModel(); //defined in model.js
     }
+    case 49: {
+      turnLightOff();
+      break;
+  }
+
+    case 50 : {
+        turnLightOn();
+        break;
+  }
+
   }
   //redraw the scene so that we can see changes
   drawModel(); //defined in model.js
