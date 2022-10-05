@@ -124,20 +124,14 @@ function initLights() {
   //set up the light for the scene
   pointLightX = 0.0;
   pointLightY = 0.0;
-  gl.uniform3f(globalAmbientLightLoc, 0.2, 0.2, 0.2); //minimum light level in the scene
+  gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1); //minimum light level in the scene
   gl.uniform4f(pointLightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the point light
   gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //point light since w = 1
-  gl.uniform4f(directionalLightColorLoc, 1.0, 0.0, 0.0, 1.0); //color of the directional light
-  gl.uniform4f(
-    directionalLightPosLoc,
-    0.0,
-    0.0,
-    -1.0,
-    0.0
-  ); // directional light since w = 1
-  gl.uniform1f(constantAttenLoc, 1.0); //these settings specify no light attenuation
-  gl.uniform1f(linearAttenLoc, 0.2);
-  gl.uniform1f(quadraticAttenLoc, 0.5);
+  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.5, 1.0); //color of the directional light
+  gl.uniform4f(directionalLightPosLoc, 0, -0.5, -0.5, 0); // directional light since w = 0
+  gl.uniform1f(constantAttenLoc, 1.0);
+  gl.uniform1f(linearAttenLoc, 0.1);
+  gl.uniform1f(quadraticAttenLoc, 0.3);
 }
 
 //We call drawModel to render to our canvas
@@ -242,17 +236,17 @@ function resetModel() {
 }
 
 function turnLightOff() {
-  gl.uniform4f(pointLightColorLoc, 0,0,0,1); //positional light since w = 1
+  gl.uniform4f(pointLightColorLoc, 0, 0, 0, 1); //positional light since w = 1
 }
 
 function turnLightOn() {
-  gl.uniform4f(pointLightColorLoc, 1,1,1,1); //positional light since w = 1
+  gl.uniform4f(pointLightColorLoc, 1, 1, 1, 1); //positional light since w = 1
 }
 
 function turnDirLightOff() {
-  gl.uniform4f(directionalLightColorLoc, 0,0,0,0); //directional light since w = 1
+  gl.uniform4f(directionalLightColorLoc, 0, 0, 0, 0); //directional light since w = 0
 }
 
 function turnDirLightOn() {
-  gl.uniform4f(directionalLightColorLoc, 1,1,1,0); //directional light since w = 1
+  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.51, 1); //directional light since w = 0
 }
