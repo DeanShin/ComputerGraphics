@@ -248,5 +248,5 @@ function turnDirLightOff() {
 }
 
 function turnDirLightOn() {
-  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.51, 1); //directional light since w = 0
+  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.5, 1); //directional light since w = 0
 }
