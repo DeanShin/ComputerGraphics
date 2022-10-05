@@ -242,7 +242,7 @@ function resetModel() {
 }
 
 function turnLightOff() {
-  gl.uniform4f(pointLightColorLoc, 0,0,0,0); //positional light since w = 1
+  gl.uniform4f(pointLightColorLoc, 0,0,0,1); //positional light since w = 1
 }
 
 function turnLightOn() {
@@ -250,9 +250,9 @@ function turnLightOn() {
 }
 
 function turnDirLightOff() {
-  gl.uniform4f(directionalLightColorLoc, 0,0,0,0); //positional light since w = 1
+  gl.uniform4f(directionalLightColorLoc, 0,0,0,0); //directional light since w = 1
 }
 
 function turnDirLightOn() {
-  gl.uniform4f(directionalLightColorLoc, 1,1,1,1); //positional light since w = 1
+  gl.uniform4f(directionalLightColorLoc, 1,1,1,0); //directional light since w = 1
 }
