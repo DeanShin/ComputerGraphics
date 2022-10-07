@@ -96,11 +96,7 @@ function createTetra(offX, offY, offZ) {
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
   //background vertices
-const bgVert = [
-  ...[-2, -1, 0],
-  ...[0, 1, 1],
-  ...[2, -1, 0],
-];
+  const bgVert = [...[-2, -1, 0], ...[0, 1, 1], ...[2, -1, 0]];
 
   VAOBG = gl.createVertexArray();
   gl.bindVertexArray(VAOBG);
@@ -108,11 +104,7 @@ const bgVert = [
   //Set up the VBO for the background vertex positions
   BGVPB = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, BGVPB);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array(bgVert),
-    gl.STATIC_DRAW
-  );
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bgVert), gl.STATIC_DRAW);
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
 
@@ -237,23 +229,26 @@ function initLights() {
   linearAttenLoc = gl.getUniformLocation(program, "linearAttenuation");
   quadraticAttenLoc = gl.getUniformLocation(program, "quadraticAttenuation");
 
-  //set up the light for the scene
+  // Ambient light
+  gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1);
+  // Point light
   pointLightX = 0.0;
   pointLightY = 0.0;
-  gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1); //minimum light level in the scene
   gl.uniform4f(pointLightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the point light
-  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1.0); //point light since w = 1
-  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.5, 1.0); //color of the directional light
-  gl.uniform4f(directionalLightPosLoc, 0, -0.5, -0.5, 0); // directional light since w = 0
-  gl.uniform1f(constantAttenLoc, 1.0);
+  gl.uniform4f(pointLightPosLoc, pointLightX, pointLightY, -1.0, 1); //point light since w = 1
+  // Directinoal light
+  gl.uniform4f(directionalLightColorLoc, 0.75, 0.25, 0.25, 0); //color of the directional light
+  gl.uniform4f(directionalLightPosLoc, 0.03, 0.1, -0.1, 0); // directional light since w = 0
+  // Light attenuation
+  gl.uniform1f(constantAttenLoc, 1);
   gl.uniform1f(linearAttenLoc, 0.1);
-  gl.uniform1f(quadraticAttenLoc, 0.3);
+  gl.uniform1f(quadraticAttenLoc, 0.2);
 }
+
 function drawTetra(VAOin) {
   gl.bindVertexArray(VAOin);
 
-  //TODO: change the shininess coefficient
-  gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
+  gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 0.75
   //Draw the tetrahedron - side 1
   const indices1 = [0, 2, 1]; //Indices for side 1. Define in a counter-clockwise order.
   gl.vertexAttrib3f(1, 1, 0, 0); //use a static vertex attribute (location == 1) to set the color to red
@@ -286,12 +281,8 @@ function drawTetra(VAOin) {
     gl.DYNAMIC_DRAW
   );
   gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
-
-  //Clean
-  gl.bindVertexArray(null);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
+
 //We call drawModel to render to our canvas
 //This function is similar to the draw() function defined in the section "Time for Action: Rendering a Square" of the textbook
 function drawModel() {
@@ -300,11 +291,10 @@ function drawModel() {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.bindVertexArray(VAOBG);
 
-  //TODO: change the shininess coefficient
-  gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
-  //Draw the BG
-  const indicesBG = [2,1,0]; //Indices for side 1. Define in a counter-clockwise order.
-  gl.vertexAttrib3f(1, 0.01, 0.01, 0.01); //use a static vertex attribute (location == 1) to set the color to red
+  // Draw the background triangle
+  gl.vertexAttrib1f(3, 1); //use a static vertex attribute (location == 3) to set shininess for background to 1
+  const indicesBG = [2, 1, 0]; //Indices for side 1. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 0.05, 0.05, 0.2); //use a static vertex attribute (location == 1) to set the color to dark blue
   gl.vertexAttrib3f(2, 0, 0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
   gl.bufferData(
     gl.ELEMENT_ARRAY_BUFFER,
@@ -312,11 +302,16 @@ function drawModel() {
     gl.DYNAMIC_DRAW
   );
   gl.drawElements(gl.TRIANGLES, indicesBG.length, gl.UNSIGNED_SHORT, 0);
+  // Draw tetrahedrons
   drawTetra(VAO0);
   drawTetra(VAO1);
   drawTetra(VAO2);
   drawTetra(VAO3);
 
+  //Clean
+  gl.bindVertexArray(null);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
 //return the WebGL context to the caller
@@ -358,17 +353,21 @@ function resetModel() {
 }
 
 function turnLightOff() {
-  gl.uniform4f(pointLightColorLoc, 0, 0, 0, 1); //positional light since w = 1
+  // Turn off light by setting color to black
+  gl.uniform4f(pointLightColorLoc, 0, 0, 0, 1);
 }
 
 function turnLightOn() {
-  gl.uniform4f(pointLightColorLoc, 1, 1, 1, 1); //positional light since w = 1
+  // Set color to white
+  gl.uniform4f(pointLightColorLoc, 1, 1, 1, 1);
 }
 
 function turnDirLightOff() {
-  gl.uniform4f(directionalLightColorLoc, 0, 0, 0, 0); //directional light since w = 0
+  // Turn off light by setting color to black
+  gl.uniform4f(directionalLightColorLoc, 0, 0, 0, 1);
 }
 
 function turnDirLightOn() {
-  gl.uniform4f(directionalLightColorLoc, 0.5, 0.5, 0.5, 1); //directional light since w = 0
+  // Set color to pink
+  gl.uniform4f(directionalLightColorLoc, 0.75, 0.25, 0.25, 1); //directional light since w = 0
 }
