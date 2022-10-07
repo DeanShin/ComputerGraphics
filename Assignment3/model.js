@@ -7,8 +7,11 @@
 //These variables can be accessed in any function
 let gl;
 let program;
+let VAOBG, BGVPB, BGIB;
 let VAO0, tetrahedronVPB0, tetrahedronIB0;
 let VAO1, tetrahedronVPB1, tetrahedronIB1;
+let VAO2, tetrahedronVPB2, tetrahedronIB2;
+let VAO3, tetrahedronVPB3, tetrahedronIB3;
 let pointLightX, pointLightY; //will be used to move the point light
 let globalAmbientLightLoc,
   pointLightColorLoc,
@@ -73,6 +76,7 @@ function initProgram() {
   // Use this program instance
   gl.useProgram(program);
 }
+//function used to aid in the rendering of tetrahedron shapes in the scene. Takes in offsets.
 function createTetra(offX, offY, offZ) {
   let tetrahedron = [
     ...[0, 0, -0.3],
@@ -91,6 +95,36 @@ function createTetra(offX, offY, offZ) {
 //Set up the buffers we need to use for rendering
 //This function is similar to what is defined in the section "Time for Action: Rendering a Square" of the textbook
 function initBuffers() {
+  //background vertices
+const bgVert = [
+  ...[-2, -1, 0],
+  ...[0, 1, 1],
+  ...[2, -1, 0],
+];
+
+  VAOBG = gl.createVertexArray();
+  gl.bindVertexArray(VAOBG);
+
+  //Set up the VBO for the background vertex positions
+  BGVPB = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, BGVPB);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(bgVert),
+    gl.STATIC_DRAW
+  );
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
+
+  //Set up the IBO for the background
+  BGIB = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, BGIB);
+
+  //Clean
+  gl.bindVertexArray(null);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
   VAO0 = gl.createVertexArray();
   gl.bindVertexArray(VAO0);
 
@@ -99,7 +133,7 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB0);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(createTetra(-0.2, -0.2, 0)),
+    new Float32Array(createTetra(-0.4, -0.2, 1.2)),
     gl.STATIC_DRAW
   );
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
@@ -123,7 +157,7 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB1);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(createTetra(0, 0, 0)),
+    new Float32Array(createTetra(0.1, 0.2, 0)),
     gl.STATIC_DRAW
   );
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
@@ -132,6 +166,52 @@ function initBuffers() {
   //Set up the IBO for the tetrahedron
   tetrahedronIB1 = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tetrahedronIB1);
+
+  //Clean
+  gl.bindVertexArray(null);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+  VAO2 = gl.createVertexArray();
+  gl.bindVertexArray(VAO2);
+
+  //Set up the VBO for the tetrahedron vertex positions
+  tetrahedronVPB2 = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB2);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(createTetra(-0.6, -0.6, 1)),
+    gl.STATIC_DRAW
+  );
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
+
+  //Set up the IBO for the tetrahedron
+  tetrahedronIB2 = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tetrahedronIB2);
+
+  //Clean
+  gl.bindVertexArray(null);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+  VAO3 = gl.createVertexArray();
+  gl.bindVertexArray(VAO3);
+
+  //Set up the VBO for the tetrahedron vertex positions
+  tetrahedronVPB3 = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB3);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(createTetra(0.6, -0.4, 0.2)),
+    gl.STATIC_DRAW
+  );
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
+
+  //Set up the IBO for the tetrahedron
+  tetrahedronIB3 = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, tetrahedronIB3);
 
   //Clean
   gl.bindVertexArray(null);
@@ -218,67 +298,25 @@ function drawModel() {
   //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.bindVertexArray(VAOBG);
 
+  //TODO: change the shininess coefficient
+  gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
+  //Draw the BG
+  const indicesBG = [2,1,0]; //Indices for side 1. Define in a counter-clockwise order.
+  gl.vertexAttrib3f(1, 0.01, 0.01, 0.01); //use a static vertex attribute (location == 1) to set the color to red
+  gl.vertexAttrib3f(2, 0, 0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(indicesBG),
+    gl.DYNAMIC_DRAW
+  );
+  gl.drawElements(gl.TRIANGLES, indicesBG.length, gl.UNSIGNED_SHORT, 0);
   drawTetra(VAO0);
   drawTetra(VAO1);
-  // //Clear the scene
-  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  drawTetra(VAO2);
+  drawTetra(VAO3);
 
-  // //Bind the VAO for our tetrahedron
-  // gl.bindVertexArray(VAO);
-
-  // //TODO: change the shininess coefficient
-  // gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
-
-  // //Draw the tetrahedron - side 1
-  // const indices1 = [0, 1, 4]; //Indices for side 1. Define in a counter-clockwise order.
-  // gl.vertexAttrib3f(1, 1, 0, 0); //use a static vertex attribute (location == 1) to set the color to red
-  // gl.vertexAttrib3f(2, -1, 0, -1); //use a static vertex attribute (location == 2) to set the normal vector
-  // gl.bufferData(
-  //   gl.ELEMENT_ARRAY_BUFFER,
-  //   new Uint16Array(indices1),
-  //   gl.DYNAMIC_DRAW
-  // );
-  // gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
-
-  // //Draw the tetrahedron - side 2
-  // const indices2 = [1, 2, 4]; //Indices for side 2. Define in a counter-clockwise order.
-  // gl.vertexAttrib3f(1, 0, 1, 0); //use a static vertex attribute (location == 1) to set the color to green
-  // gl.vertexAttrib3f(2, 0, -1, -1); //use a static vertex attribute (location == 2) to set the normal vector
-  // gl.bufferData(
-  //   gl.ELEMENT_ARRAY_BUFFER,
-  //   new Uint16Array(indices2),
-  //   gl.DYNAMIC_DRAW
-  // );
-  // gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
-
-  // //Draw the tetrahedron - side 3
-  // const indices3 = [2, 3, 4]; //Indices for side 3. Define in a counter-clockwise order.
-  // gl.vertexAttrib3f(1, 0, 0, 1); //use a static vertex attribute (location == 1) to set the color to blue
-  // gl.vertexAttrib3f(2, 1, 0, -1); //use a static vertex attribute (location == 2) to set the normal vector
-  // gl.bufferData(
-  //   gl.ELEMENT_ARRAY_BUFFER,
-  //   new Uint16Array(indices3),
-  //   gl.DYNAMIC_DRAW
-  // );
-  // gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
-
-  // //Draw the tetrahedron - side 4
-  // const indices4 = [3, 0, 4]; //Indices for side 4. Define in a counter-clockwise order.
-  // gl.vertexAttrib3f(1, 1, 1, 1); //use a static vertex attribute (location == 1) to set the color to white
-  // gl.vertexAttrib3f(2, 0, 1, -1); //use a static vertex attribute (location == 2) to set the normal vector
-  // gl.bufferData(
-  //   gl.ELEMENT_ARRAY_BUFFER,
-  //   new Uint16Array(indices4),
-  //   gl.DYNAMIC_DRAW
-  // );
-  // gl.drawElements(gl.TRIANGLES, indices1.length, gl.UNSIGNED_SHORT, 0);
-
-  // //Clean
-  // gl.bindVertexArray(null);
-  // gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
 //return the WebGL context to the caller
