@@ -73,18 +73,18 @@ function initProgram() {
   // Use this program instance
   gl.useProgram(program);
 }
-function createTetra(offX,offY,offZ){
+function createTetra(offX, offY, offZ) {
   let tetrahedron = [
-    ...[ 0, 0, -0.1],
-    ...[0.1, 0.01, 0.1],
-   ...[ -0.1, 0.01, 0.1],
-    ...[0, -0.1, 0.1], 
+    ...[0, 0, -0.3],
+    ...[0.2, 0.1, 0.2],
+    ...[-0.2, 0.1, 0.2],
+    ...[0, -0.2, 0.2],
   ];
-  let positions=[];
-  for(i=0; i<4;i++){
-    positions.push(tetrahedron[i*3]+offX);
-    positions.push(tetrahedron[(i*3)+1]+offY);
-    positions.push(tetrahedron[(i*3)+2]+offZ);
+  let positions = [];
+  for (i = 0; i < 4; i++) {
+    positions.push(tetrahedron[i * 3] + offX);
+    positions.push(tetrahedron[i * 3 + 1] + offY);
+    positions.push(tetrahedron[i * 3 + 2] + offZ);
   }
   return positions;
 }
@@ -97,7 +97,11 @@ function initBuffers() {
   //Set up the VBO for the tetrahedron vertex positions
   tetrahedronVPB0 = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB0);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(createTetra(-0.2,-0.2,0)), gl.STATIC_DRAW);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(createTetra(-0.2, -0.2, 0)),
+    gl.STATIC_DRAW
+  );
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
 
@@ -110,14 +114,18 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-    //Set up Vertex Array Object
+  //Set up Vertex Array Object
   VAO1 = gl.createVertexArray();
   gl.bindVertexArray(VAO1);
 
   //Set up the VBO for the tetrahedron vertex positions
   tetrahedronVPB1 = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, tetrahedronVPB1);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(createTetra(0,0,0)), gl.STATIC_DRAW);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(createTetra(0, 0, 0)),
+    gl.STATIC_DRAW
+  );
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
 
@@ -161,15 +169,15 @@ function initLights() {
   gl.uniform1f(linearAttenLoc, 0.1);
   gl.uniform1f(quadraticAttenLoc, 0.3);
 }
-function drawTetra(VAOin){
+function drawTetra(VAOin) {
   gl.bindVertexArray(VAOin);
 
   //TODO: change the shininess coefficient
   gl.vertexAttrib1f(3, 0.75); //use a static vertex attribute (location == 3) to set shininess for all sides to 1.0
   //Draw the tetrahedron - side 1
-  const indices1 = [0,2,1]; //Indices for side 1. Define in a counter-clockwise order.
+  const indices1 = [0, 2, 1]; //Indices for side 1. Define in a counter-clockwise order.
   gl.vertexAttrib3f(1, 1, 0, 0); //use a static vertex attribute (location == 1) to set the color to red
-  gl.vertexAttrib3f(2, 0.7, 0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.vertexAttrib3f(2, 0, 0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
   gl.bufferData(
     gl.ELEMENT_ARRAY_BUFFER,
     new Uint16Array(indices1),
@@ -180,7 +188,7 @@ function drawTetra(VAOin){
   //Draw the tetrahedron - side 2
   const indices2 = [2, 3, 0]; //Indices for side 3. Define in a counter-clockwise order.
   gl.vertexAttrib3f(1, 0, 0, 1); //use a static vertex attribute (location == 1) to set the color to blue
-  gl.vertexAttrib3f(2, -0.7, -0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.vertexAttrib3f(2, -0.6, -0.3, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
   gl.bufferData(
     gl.ELEMENT_ARRAY_BUFFER,
     new Uint16Array(indices2),
@@ -191,7 +199,7 @@ function drawTetra(VAOin){
   //Draw the tetrahedron - side 3
   const indices3 = [1, 0, 3]; //Indices for side 4. Define in a counter-clockwise order.
   gl.vertexAttrib3f(1, 1, 1, 1); //use a static vertex attribute (location == 1) to set the color to white
-  gl.vertexAttrib3f(2, 0.7, -0.6, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.vertexAttrib3f(2, 0.6, -0.3, -0.3); //use a static vertex attribute (location == 2) to set the normal vector
   gl.bufferData(
     gl.ELEMENT_ARRAY_BUFFER,
     new Uint16Array(indices3),
@@ -207,10 +215,10 @@ function drawTetra(VAOin){
 //We call drawModel to render to our canvas
 //This function is similar to the draw() function defined in the section "Time for Action: Rendering a Square" of the textbook
 function drawModel() {
-    //Clear the scene
+  //Clear the scene
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  
+
   drawTetra(VAO0);
   drawTetra(VAO1);
   // //Clear the scene
