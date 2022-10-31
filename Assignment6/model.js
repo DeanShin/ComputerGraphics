@@ -7,8 +7,9 @@
 //These variables can be accessed in any function
 let gl;
 let program;
-let VAO, vertexPB;
-let offsetX, offsetZ;
+let cubeVAO, cubeIndices;
+let localRotZ;
+let rotX, rotY;
 let globalAmbientLightLoc,
   lightColorLoc,
   lightPosLoc,
@@ -74,25 +75,104 @@ function initProgram() {
 
 //Set up the buffers and VAO we need for rendering the objects for our scene
 function initBuffers() {
-  //Vertex position data for the triangle (first three vertex positions) and point (last vertex position)
-  const positions = [
-    0.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 5.0, 0.0, 0.0,
+  const cubePositions = [
+    // front
+    ...[-1, -1, -1],
+    ...[1, -1, -1],
+    ...[-1, 1, -1],
+    ...[1, 1, -1],
+    // back
+    ...[-1, -1, 1],
+    ...[1, -1, 1],
+    ...[-1, 1, 1],
+    ...[1, 1, 1],
+    // left,
+    ...[-1, -1, -1],
+    ...[-1, 1, -1],
+    ...[-1, -1, 1],
+    ...[-1, 1, 1],
+    // right
+    ...[1, -1, -1],
+    ...[1, 1, -1],
+    ...[1, -1, 1],
+    ...[1, 1, 1],
+    // top
+    ...[-1, -1, -1],
+    ...[1, -1, -1],
+    ...[-1, -1, 1],
+    ...[1, -1, 1],
+    // bottom
+    ...[-1, 1, -1],
+    ...[1, 1, -1],
+    ...[-1, 1, 1],
+    ...[1, 1, 1],
+  ];
+
+  cubeIndices = [
+    // front
+    ...[0, 1, 2, 3, 2, 1],
+    // back
+    ...[4, 5, 6, 7, 6, 5],
+    // left
+    ...[8, 9, 10, 11, 10, 9],
+    // right
+    ...[12, 13, 14, 15, 14, 13],
+    // top
+    ...[16, 17, 18, 19, 18, 17],
+    // bottom
+    ...[20, 21, 22, 23, 22, 21],
+  ];
+
+  const cubeNormals = [
+    // front
+    ...[...[0, 0, -1], ...[0, 0, -1], ...[0, 0, -1], ...[0, 0, -1]],
+    // back
+    ...[...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1]],
+    // left
+    ...[...[-1, 0, 0], ...[-1, 0, 0], ...[-1, 0, 0], ...[-1, 0, 0]],
+    // right
+    ...[...[1, 0, 0], ...[1, 0, 0], ...[1, 0, 0], ...[1, 0, 0]],
+    // top
+    ...[...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1], ...[0, 0, 1]],
+    // bottom
+    ...[...[0, 0, -1], ...[0, 0, -1], ...[0, 0, -1], ...[0, 0, -1]],
   ];
 
   //Set up Vertex Array Object
-  VAO = gl.createVertexArray();
-  gl.bindVertexArray(VAO);
+  cubeVAO = gl.createVertexArray();
+  gl.bindVertexArray(cubeVAO);
 
-  //Set up the VBO for the pyramid vertex positions
-  vertexPB = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexPB);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  //Set up the VBO for the cube vertex positions
+  const cubeVertexPB = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPB);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(cubePositions),
+    gl.STATIC_DRAW
+  );
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  const cubeVertexIBO = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIBO);
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array(cubeIndices),
+    gl.STATIC_DRAW
+  );
+  // console.log(cubeVertexIB);
+
+  const cubeVertexNormalPB = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalPB);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cubeNormals), gl.STATIC_DRAW);
+  gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(2);
 
   //Clean
   gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
 //initialize the lights
@@ -128,15 +208,13 @@ function drawModel() {
   var scale_matrix = mat4.create();
   var translate_matrix = mat4.create();
   var rotate_matrix = mat4.create();
-
-  //bind the VAO for the triangle and point
-  gl.bindVertexArray(VAO);
+  var globalRotateMatrix = mat4.create();
 
   //set shininess for the Phong Reflection Model
   gl.vertexAttrib1f(3, 1.0); //use a static vertex attribute (location == 3) to set shininess for all polygons to 1.0
 
   //all triangles and points will have the same normal vector, so we will set it once with a static vertex attribute
-  gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
+  // gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
 
   projection_matrix = mat4.frustum(
     projection_matrix,
@@ -150,53 +228,71 @@ function drawModel() {
   gl.uniformMatrix4fv(projectionMatrixLoc, false, projection_matrix); //send the projection matrix to the shaders
 
   //Set up the view orientation transformation matrix
-  var eye = [0.0, 0.0, offsetZ];
-  var aim = [0.0, 0.0, offsetZ - 0.1]; //set the aim a little down the negative z-axis in front of the eye
+  var eye = [0, 0.0, 2];
+  var aim = [0.0, 0.0, 0.5]; //set the aim a little down the negative z-axis in front of the eye
   var up = [0.0, 1.0, 0];
   view_matrix = mat4.lookAt(view_matrix, eye, aim, up); //calculate the view orientation matrix
   gl.uniformMatrix4fv(viewMatrixLoc, false, view_matrix); //send view matrix to the shaders
 
+  globalRotateMatrix = mat4.rotate(
+    globalRotateMatrix,
+    mat4.identity(globalRotateMatrix),
+    rotX,
+    [1, 0, 0]
+  );
+  globalRotateMatrix = mat4.rotate(
+    globalRotateMatrix,
+    globalRotateMatrix,
+    rotY,
+    [0, 1, 0]
+  );
+
+  gl.bindVertexArray(cubeVAO);
   var scale_amount = [0.5, 0.5, 0.5];
   scale_matrix = mat4.scale(
     scale_matrix,
     mat4.identity(scale_matrix),
     scale_amount
   );
-  model_matrix = mat4.copy(model_matrix, scale_matrix);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send scale matrix to the shaders
-  gl.vertexAttrib3f(1, 1, 0, 0); //use a static vertex attribute (location == 1) to set the color to red
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.vertexAttrib3f(1, 0, 1, 1);
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
 
-  //2) Position and draw the cyan triangle
-  var translate_vec = [offsetX, 0.0, -2.5];
-  translate_matrix = mat4.translate(
-    translate_matrix,
-    mat4.identity(translate_matrix),
-    translate_vec
-  );
-  model_matrix = mat4.multiply(model_matrix, translate_matrix, scale_matrix);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
-  gl.vertexAttrib3f(1, 0, 1, 1); //use a static vertex attribute (location == 1) to set the color to cyan
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // //2) Position and draw the cyan triangle
+  // var translate_vec = [0, 0.0, -2.5];
+  // translate_matrix = mat4.translate(
+  //   translate_matrix,
+  //   mat4.identity(translate_matrix),
+  //   translate_vec
+  // );
+  // model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+  // model_matrix = mat4.multiply(model_matrix, model_matrix, translate_matrix);
+  // gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
+  // gl.vertexAttrib3f(1, 0, 1, 1); //use a static vertex attribute (location == 1) to set the color to cyan
+  // gl.drawElements(gl.TRIANGLES, cubeVerticesCount, gl.UNSIGNED_SHORT, 0);
 
-  //3) Position and draw the yellow triangle
-  translate_vec = [-0.5, 0.5, -5.0];
-  translate_matrix = mat4.translate(
-    translate_matrix,
-    mat4.identity(translate_matrix),
-    translate_vec
-  );
-  var rotate_axis = [0.0, 0.0, 1.0];
-  rotate_matrix = mat4.rotate(
-    rotate_matrix,
-    translate_matrix,
-    1.5708,
-    rotate_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.multiply(model_matrix, rotate_matrix, scale_matrix);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
-  gl.vertexAttrib3f(1, 1, 1, 0); //use a static vertex attribute (location == 1) to set the color to yellow
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // //3) Position and draw the yellow triangle
+  // translate_vec = [-0.5, 0.5, -5.0];
+  // translate_matrix = mat4.translate(
+  //   translate_matrix,
+  //   mat4.identity(translate_matrix),
+  //   translate_vec
+  // );
+  // var rotate_axis = [0.0, 0.0, 1.0];
+  // rotate_matrix = mat4.rotate(
+  //   rotate_matrix,
+  //   translate_matrix,
+  //   localRotZ,
+  //   rotate_axis
+  // ); //NOTE: angle in radians
+  // model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, rotate_matrix);
+  // model_matrix = mat4.multiply(model_matrix, model_matrix, scale_matrix);
+
+  // gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
+  // gl.vertexAttrib3f(1, 1, 1, 0); //use a static vertex attribute (location == 1) to set the color to yellow
+  // gl.drawElements(gl.TRIANGLES, cubeVerticesCount, gl.UNSIGNED_SHORT, 0);
 }
 
 //return the WebGL context to the caller
@@ -206,7 +302,6 @@ function initModel(view) {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.viewport(0.0, 0.0, view.width, view.height);
-    //TODO 1: remove the comment from the line below to enable the depth test
     gl.enable(gl.DEPTH_TEST); //turn on the depth test
 
     initProgram(); //load the shaders
@@ -218,21 +313,25 @@ function initModel(view) {
 
     initBuffers();
     initLights();
-
-    offsetX = 0.1;
-    offsetZ = 0.5;
+    rotX = 0;
+    rotY = 0;
+    localRotZ = 0;
 
     return gl;
   }
   return null;
 }
 
-function updateOffsetX(offset) {
-  offsetX = offsetX + offset;
+function updateRotX(offset) {
+  rotX += offset;
 }
 
-function updateOffsetZ(offset) {
-  offsetZ = offsetZ + offset;
+function updateRotY(offset) {
+  rotY += offset;
+}
+
+function updateLocalRotZ(offset) {
+  localRotZ += offset;
 }
 
 function resetModel() {
