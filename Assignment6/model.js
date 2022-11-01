@@ -188,7 +188,7 @@ function initLights() {
   //set up the light for the scene
   gl.uniform3f(globalAmbientLightLoc, 0.2, 0.2, 0.2); //minimum light level in the scene
   gl.uniform4f(lightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the light (in this case it is white)
-  gl.uniform4f(lightPosLoc, 0.0, 6.0, 1.0, 1.0); //positional light since w = 1
+  gl.uniform4f(lightPosLoc, 0.0, 5.0, 5.0, 1.0); //positional light since w = 1
   gl.uniform1f(constantAttenLoc, 1.0); //these settings specify no light attenuation
   gl.uniform1f(linearAttenLoc, 0.0);
   gl.uniform1f(quadraticAttenLoc, 0.0);
@@ -209,9 +209,6 @@ function drawModel() {
   var translate_matrix = mat4.create();
   var rotate_matrix = mat4.create();
   var globalRotateMatrix = mat4.create();
-
-  //set shininess for the Phong Reflection Model
-  gl.vertexAttrib1f(3, 1.0); //use a static vertex attribute (location == 3) to set shininess for all polygons to 1.0
 
   //all triangles and points will have the same normal vector, so we will set it once with a static vertex attribute
   // gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
@@ -247,52 +244,102 @@ function drawModel() {
     [0, 1, 0]
   );
 
+  // Tower color
+  gl.vertexAttrib3f(1, 0.75, 0.5, 0.33);
+  // Tower shininess
+  gl.vertexAttrib1f(3, 10);
+
+  // Bottom of tower
   gl.bindVertexArray(cubeVAO);
-  var scale_amount = [0.5, 0.5, 0.5];
-  scale_matrix = mat4.scale(
-    scale_matrix,
-    mat4.identity(scale_matrix),
-    scale_amount
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, -0.5, 0]
   );
+  scale_matrix = mat4.scale(scale_matrix, translate_matrix, [0.5, 0.2, 0.5]);
   model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
 
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send scale matrix to the shaders
-  gl.vertexAttrib3f(1, 0, 1, 1);
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); // send transform matrix to the shaders
+
   gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
 
-  // //2) Position and draw the cyan triangle
-  // var translate_vec = [0, 0.0, -2.5];
-  // translate_matrix = mat4.translate(
-  //   translate_matrix,
-  //   mat4.identity(translate_matrix),
-  //   translate_vec
-  // );
-  // model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
-  // model_matrix = mat4.multiply(model_matrix, model_matrix, translate_matrix);
-  // gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
-  // gl.vertexAttrib3f(1, 0, 1, 1); //use a static vertex attribute (location == 1) to set the color to cyan
-  // gl.drawElements(gl.TRIANGLES, cubeVerticesCount, gl.UNSIGNED_SHORT, 0);
+  // Middle of tower
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, 0, 0]
+  );
+  scale_matrix = mat4.scale(scale_matrix, translate_matrix, [0.4, 0.6, 0.4]);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
 
-  // //3) Position and draw the yellow triangle
-  // translate_vec = [-0.5, 0.5, -5.0];
-  // translate_matrix = mat4.translate(
-  //   translate_matrix,
-  //   mat4.identity(translate_matrix),
-  //   translate_vec
-  // );
-  // var rotate_axis = [0.0, 0.0, 1.0];
-  // rotate_matrix = mat4.rotate(
-  //   rotate_matrix,
-  //   translate_matrix,
-  //   localRotZ,
-  //   rotate_axis
-  // ); //NOTE: angle in radians
-  // model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, rotate_matrix);
-  // model_matrix = mat4.multiply(model_matrix, model_matrix, scale_matrix);
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); // send transform matrix to the shaders
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
 
-  // gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
-  // gl.vertexAttrib3f(1, 1, 1, 0); //use a static vertex attribute (location == 1) to set the color to yellow
-  // gl.drawElements(gl.TRIANGLES, cubeVerticesCount, gl.UNSIGNED_SHORT, 0);
+  // Top of tower
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, 0.8, 0]
+  );
+  scale_matrix = mat4.scale(scale_matrix, translate_matrix, [0.3, 0.2, 0.3]);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); // send transform matrix to the shaders
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
+
+  // Peg
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, 0.3, 0.5]
+  );
+  scale_matrix = mat4.scale(scale_matrix, translate_matrix, [0.02, 0.02, 0.2]);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); // send transform matrix to the shaders
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
+
+  // Draw the windmill blades
+  gl.vertexAttrib3f(1, 1, 1, 1); //use a static vertex attribute (location == 1) to set the color to white
+  gl.vertexAttrib1f(3, 5);
+
+  // Blade 1
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, 0.3, 0.55]
+  );
+  rotate_matrix = mat4.rotate(
+    rotate_matrix,
+    translate_matrix,
+    localRotZ,
+    [0.0, 0.0, 1.0]
+  );
+  scale_matrix = mat4.scale(scale_matrix, rotate_matrix, [0.15, 0.8, 0.02]);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
+
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
+
+  // Blade 2
+  translate_matrix = mat4.translate(
+    translate_matrix,
+    mat4.identity(translate_matrix),
+    [0, 0.3, 0.55]
+  );
+  rotate_matrix = mat4.rotate(
+    rotate_matrix,
+    translate_matrix,
+    localRotZ + 1.5707,
+    [0.0, 0.0, 1.0]
+  );
+  scale_matrix = mat4.scale(scale_matrix, rotate_matrix, [0.15, 0.8, 0.02]);
+  model_matrix = mat4.multiply(model_matrix, globalRotateMatrix, scale_matrix);
+
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send model matrix to the shaders
+
+  gl.drawElements(gl.TRIANGLES, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
 }
 
 //return the WebGL context to the caller

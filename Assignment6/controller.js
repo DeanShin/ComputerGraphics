@@ -62,9 +62,9 @@ function controller() {
   model = initModel(view); //initModel is defined in model.js
 
   if (model) {
-    // alert(
-    //   "Use left and right to rotate around the y axis. Use up and down to rotate around the x axis. Use 1 to toggle animations."
-    // );
+    alert(
+      "Use left and right to rotate around the y axis. Use up and down to rotate around the x axis. Use 1 to toggle animations."
+    );
     //make sure everything got initialized before proceeding
     drawModel(); // defined in model.js
     window.onkeydown = checkKey; //call checkKey whenever a key is pressed
