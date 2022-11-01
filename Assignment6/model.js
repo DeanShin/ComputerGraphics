@@ -161,7 +161,6 @@ function initBuffers() {
     new Uint16Array(cubeIndices),
     gl.STATIC_DRAW
   );
-  // console.log(cubeVertexIB);
 
   const cubeVertexNormalPB = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalPB);
@@ -210,9 +209,7 @@ function drawModel() {
   var rotate_matrix = mat4.create();
   var globalRotateMatrix = mat4.create();
 
-  //all triangles and points will have the same normal vector, so we will set it once with a static vertex attribute
-  // gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
-
+  // Set up the projection matrix.
   projection_matrix = mat4.frustum(
     projection_matrix,
     -0.1,
@@ -231,6 +228,7 @@ function drawModel() {
   view_matrix = mat4.lookAt(view_matrix, eye, aim, up); //calculate the view orientation matrix
   gl.uniformMatrix4fv(viewMatrixLoc, false, view_matrix); //send view matrix to the shaders
 
+  // Set up the global rotate matrix. We will rotate every object by the global rotate matrix.
   globalRotateMatrix = mat4.rotate(
     globalRotateMatrix,
     mat4.identity(globalRotateMatrix),
