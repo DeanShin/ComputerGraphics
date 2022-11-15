@@ -23,9 +23,10 @@ We are also loading additional JavaScript files to break the code up into more, 
 <!-- TODO 4 and 5: Load your own image files here -->
 
 <html>
+
 <head>
     <title>COMP 153 - Lab 10</title>
-    
+
     <style type="text/css">
         canvas {
             border: 5px solid black;
@@ -33,6 +34,7 @@ We are also loading additional JavaScript files to break the code up into more, 
     </style>
 
     <!-- load the javascript files used in the program-->
+    <script src="game.js" defer></script>
     <script src="model.js" defer></script>
     <script src="view.js" defer></script>
     <script src="controller.js" defer></script>
@@ -42,7 +44,8 @@ We are also loading additional JavaScript files to break the code up into more, 
     <script src="pyramid.js" defer></script>
     <!-- TODO 3: Load your own JavaScript file here-->
 
-    <script src="gl-matrix.js" defer></script> <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
+    <script src="gl-matrix.js" defer></script>
+    <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
 
     <!-- Define the vertex and fragment shaders -->
     <script id="phong-tex-vertex-shader" type="shader.vert">
@@ -301,16 +304,17 @@ We are also loading additional JavaScript files to break the code up into more, 
 
     <!-- Call our controller function from main once the document has loaded -->
     <script type="text/javascript">
-        function main()
-        {
+        function main() {
             controller(); //controller is defined in controller.js
         }
         window.onload = main; 
     </script>
 </head>
+
 <body>
     <canvas id="webgl-canvas" width="600" height="600">
         Your browser does not support the HTML5 canvas element.
     </canvas>
 </body>
+
 </html>

@@ -545,9 +545,9 @@ class Game {
     this.gameState = GameState.ACTIVE;
 
     // Put the player in the top left
-    this.player = new Token(TokenType.PLAYER, new Position(this.rows - 1, 0));
+    this.player = new Token(TokenType.PLAYER, new Vector3(this.rows - 1, 0));
     // Put the monster in the bottom right
-    this.monster = new Token(TokenType.MONSTER, new Position(0, this.cols - 1));
+    this.monster = new Token(TokenType.MONSTER, new Vector3(0, this.cols - 1));
     this.coins = [];
     this.walls = [];
 
@@ -556,7 +556,7 @@ class Game {
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
         const potentialCol = Math.floor(Math.random() * this.cols);
-        const potentialPos = new Position(potentialRow, potentialCol);
+        const potentialPos = new Vector3(potentialRow, potentialCol);
         if (!this.occupiedByToken(potentialPos)) {
           this.coins.push(new Token(TokenType.COIN, potentialPos));
           break;
@@ -583,7 +583,7 @@ class Game {
       ];
 
       const reachableCoinCount = (i, j) => {
-        const curPos = new Position(i, j);
+        const curPos = new Vector3(i, j);
         if (
           this.outOfBounds(curPos) ||
           visited[i][j] ||
@@ -611,7 +611,7 @@ class Game {
       while (true) {
         const potentialRow = Math.floor(Math.random() * this.rows);
         const potentialCol = Math.floor(Math.random() * this.cols);
-        const potentialPos = new Position(potentialRow, potentialCol);
+        const potentialPos = new Vector3(potentialRow, potentialCol);
         if (this.occupiedByToken(potentialPos)) continue;
 
         this.walls.push(new Token(TokenType.WALL, potentialPos));
@@ -655,7 +655,7 @@ class Game {
     }
 
     const [row, col] = this.player.position.getRowAndCol();
-    const newPosition = new Position(row + rowOffset, col + colOffset);
+    const newPosition = new Vector3(row + rowOffset, col + colOffset);
 
     if (this.outOfBounds(newPosition) || this.occupiedByWall(newPosition)) {
       return;
@@ -686,7 +686,7 @@ class Game {
       colOffset = -1;
     }
 
-    const newPosition = new Position(
+    const newPosition = new Vector3(
       monsterRow + rowOffset,
       monsterCol + colOffset
     );
