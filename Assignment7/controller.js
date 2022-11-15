@@ -25,7 +25,6 @@ function checkKey(event) {
         //right arrow key was pressed (39 in ASCII)
         case 68: {
             updateEyeX(0.2); //defined in model.js
-            // document.write(MouseEvent.pageX);
             break;
         }
 
@@ -48,11 +47,8 @@ function checkMouse(event) {
 
     var x = event.movementX ;
     var y = event.movementY ;
-    // console.log(event.movementX);
-    // console.log(event.movementY);
     updateRotY(x/80);
     updateRotZ(y/80);
-
 
     drawModel();
     
@@ -61,10 +57,8 @@ function lockChangeAlert() {
     if (document.pointerLockElement === canvas ||
         document.mozPointerLockElement === canvas) {
       console.log('The pointer lock status is now locked');
-      //document.addEventListener("mousemove", updatePosition, false);
     } else {
       console.log('The pointer lock status is now unlocked');
-      //document.removeEventListener("mousemove", updatePosition, false);
     }
   }
 
