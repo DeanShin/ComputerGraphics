@@ -349,7 +349,6 @@ function drawModel() {
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
 
   gl.bindTexture(gl.TEXTURE_2D, starTex);
-  gl.vertexAttrib3f(0, 0, 5.0, 0); //use a static vertex attribute (location == 0) to set the position to (0,5.0,0)
   gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
 
   gl.bindTexture(gl.TEXTURE_2D, treeTex);
@@ -443,7 +442,7 @@ function updateRotY(offset) {
 
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1];
+  aim[1] = eye[1]  + (-rotZ); 
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
