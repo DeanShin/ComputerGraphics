@@ -347,13 +347,8 @@ function drawModel() {
   var vec1 = [1, 0, -0.11];
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-
   gl.bindTexture(gl.TEXTURE_2D, starTex);
   gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
-
-  gl.bindTexture(gl.TEXTURE_2D, treeTex);
-  gl.vertexAttrib3f(0, 12.0, 2.3, 12.0); //use a static vertex attribute (location == 0) to set the position to (12,2.3,12)
-  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (12,2.3,12)
 
   //TODO 5: bind your texture, then position and draw a point sprite using your own image as the texture
 

@@ -81,7 +81,7 @@ function drawGun(gl) {
   //all triangles and points will have the same normal vector, so we will set it once with a static vertex attribute
   gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
 
-  gl.vertexAttrib3f(0.1, 0.1, 0.1, 0); //use a static vertex attribute (location == 1) to set the color to black/grey
+  gl.vertexAttrib3f(1, 0.0, 0.0, 1); //use a static vertex attribute (location == 1) to set the color to black/grey
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 42);
 
   //Clean
