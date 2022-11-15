@@ -169,7 +169,7 @@ function initTextures()
 
     gl.bindTexture(gl.TEXTURE_2D, null);
 }
-w
+
 //We call drawModel to render to our canvas
 function drawModel() 
 {  
