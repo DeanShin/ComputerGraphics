@@ -447,13 +447,20 @@ function updateRotY(offset) {
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
-function updateRotZ(offset) {
-  rotZ = rotZ + offset;
-
-  //Adjust the aim position based on the new rotZ
-  aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1] + -rotZ;
-  aim[2] = eye[2] + Math.sin(rotY);
+function updateRotZ(offset)
+{
+    rotZ = rotZ + offset;
+//     //Adjust the aim position based on the new rotZ
+    if (rotZ > -2.5 && rotZ < 2.5){
+        aim[1] = eye[1] + (-rotZ);
+        //rotZ = rotZ + offset;
+    }
+    else if (rotZ <= -2.5){
+        rotZ = -2.49;
+    }
+    else{
+        rotZ = 2.49;
+    }
 }
 
 function aimDownSights(check) {
