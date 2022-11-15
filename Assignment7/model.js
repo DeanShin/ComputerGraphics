@@ -13,6 +13,9 @@ let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
 let glacierTex, yosemiteTex, tigerTex, starTex, treeTex;
 let offsetGun, offsetGunX, angle;
+let gunPos;
+let gunRot;
+
 //TODO 4 and 5: create your own texture variables here
 
 //Given a canvas element, return the WebGL2 context
@@ -213,8 +216,8 @@ function drawModel()
     model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
     model_matrix = mat4.rotate(model_matrix, model_matrix, -0.1 - rotY , rotate_axis); //NOTE: angle in radians
     model_matrix = mat4.rotate(model_matrix, model_matrix, -rotZ/div_value , rotate_axis1); //NOTE: angle in radians
-    var vec1 = [2.25,-1.5,0.8];
-    model_matrix = mat4.translate(model_matrix, (model_matrix), vec1);
+    model_matrix = mat4.translate(model_matrix, (model_matrix), gunPos);
+    model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot , rotate_axis); //NOTE: angle in radians
     console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
     console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
     console.log("rotY cos: " + Math.cos(rotY));
@@ -316,6 +319,8 @@ function initModel(view) {
         initTextures();
 
         //initialize movement variables
+        gunPos = [2.25,-1.5,0.8];
+        gunRot = 0;
         rotY = 3.14159 / 2.0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis 
         rotZ = 0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis 
         offsetGun= 0.1;
@@ -377,6 +382,18 @@ function updateRotZ(offset)
     aim[2] = eye[2] + Math.sin(rotY);
 }
 
+function aimDownSights(check){
+    if (check) {
+        gunPos = [1.6,-2,-0.2];
+        gunRot = 0.1;
+    }
+    else {
+        gunPos = [2.25,-1.5,0.8];
+        gunRot = 0;
+    }
+ 
+}
+
 function resetModel() {
     rotY = 3.14159 / 2.0;
     rotZ = 0;
@@ -387,6 +404,8 @@ function resetModel() {
     updateRotZ(0.0);
     offsetGun= 0.1;
     offsetGunX= 0.1;
+    gunPos = [2.25,-1.5,0.8];
+    gunRot = 0;
 
 
 

@@ -3,10 +3,12 @@
 //Date:			9/22/2020
 //Purpose:		This file defines the code for our controller
 //The "controller" runs the program and handles events.
-alert("- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor");
+//alert("- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Press '1' to reset the scene");
 let model;
 let view; //the "view" is our Canvas
 let timer; //used for Task 3 in the lab
+let pressedKeys = {};
+
 
 function checkKey(event) {
     switch (event.keyCode) {
@@ -103,7 +105,18 @@ function controller() {
               toggleFullScreen();
             }
           }, false);  
-       
+
+        document.addEventListener("keydown", function(event) {
+         if (event.key === 'Shift') {
+                aimDownSights(true);
+            }   
+        }, false);  
+        document.addEventListener("keyup", function(event) {
+        if (event.key === 'Shift') {
+                aimDownSights(false);
+            }   
+        }, false);  
+
     }
     else
     {
