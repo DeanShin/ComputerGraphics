@@ -16,16 +16,16 @@ We are also loading additional JavaScript files to break the code up into more, 
 <img src="tiger.bmp" id="tiger" hidden />
 <img src="star.bmp" id="star" hidden />
 <img src="tree.bmp" id="tree" hidden />
+<img src="crosshair2.png" id="star" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
 -->
-<!-- TODO 4 and 5: Load your own image files here -->
 
 <html>
 
 <head>
-    <title>COMP 153 - Lab 10</title>
+    <title>Assignment 7</title>
 
     <style type="text/css">
         canvas {
@@ -42,7 +42,7 @@ We are also loading additional JavaScript files to break the code up into more, 
     <script src="cube.js" defer></script>
     <script src="texsquare.js" defer></script>
     <script src="pyramid.js" defer></script>
-    <!-- TODO 3: Load your own JavaScript file here-->
+    <script src="gun.js" defer></script>
 
     <script src="gl-matrix.js" defer></script>
     <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
@@ -296,9 +296,8 @@ We are also loading additional JavaScript files to break the code up into more, 
             float threshold = 0.15;
             vec4 color = texture(tex_image, gl_PointCoord);
             frag_color = color;
-            //TODO: Add the two lines below to make the texture transparent where it is black (or at least very dark gray)
-            //if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
-            //    discard; //pretend this fragment doesn't exist (i.e. make it transparent)
+            if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
+                discard; //pretend this fragment doesn't exist (i.e. make it transparent)
         }
     </script>
 
@@ -312,7 +311,7 @@ We are also loading additional JavaScript files to break the code up into more, 
 </head>
 
 <body>
-    <canvas id="webgl-canvas" width="600" height="600">
+    <canvas id="webgl-canvas" width="1920" height="1080">
         Your browser does not support the HTML5 canvas element.
     </canvas>
 </body>
