@@ -275,10 +275,6 @@ We are also loading additional JavaScript files to break the code up into more, 
         {  
             gl_PointSize = 50.0;  //NOTE: the value assigned to gl_PointSize must be a float
             gl_Position = projectionMatrix * viewMatrix * modelMatrix * vertexPosition;
-            //TODO: Comment out the two lines of code above and add the three lines below to scale size base on distance from the eye
-            //vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition.x, vertexPosition.y, vertexPosition.z, 1.0);
-            //gl_PointSize = (1.0 - pos.z / pos.w) * 1000.0; //set gl_PointSize for point sprites as a function of the distance from viewer
-            //gl_Position = pos;
         }
     </script>
     <script id="point-sprite-fragment-shader" type="shader.frag">
@@ -297,6 +293,32 @@ We are also loading additional JavaScript files to break the code up into more, 
             frag_color = color;
             if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
                 discard; //pretend this fragment doesn't exist (i.e. make it transparent)
+        }
+    </script>
+    <script id="fog-fragment-shader" type="shader.frag">
+        #version 300 es
+        precision mediump float;
+        // See the section of the textbook titled "Point Sprites" for a discussion of point sprites
+
+        // uniform variabless
+        uniform vec3 globalAmbientLight;
+        uniform mat4 viewMatrix; //needed to transform the light positions into "eye" coordinates
+        uniform vec4 light_color; //color of light
+        uniform vec4 light_position; //location of light if w = 1, otherwise the direction towards the light
+        uniform vec4 fogColor;
+
+        in vec4 position; //position of the fragment in "eye" coordinates
+        in vec4 color; //surface color at the fragment
+        in vec3 normal; //normal vector at the fragment in "eye" coordinates
+        in float shininess; //shininess of the surface at the fragment
+        in vec2 vs_tex_coord;
+
+        out vec4 frag_color; //resulting fragment color after lighting is applied
+
+        void main()
+        {
+            float distance = (1.0 - position.z / position.w);
+            frag_color = mix(color, fogColor, distance / 25.0);
         }
     </script>
 
