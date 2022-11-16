@@ -22,6 +22,7 @@ let glacierTex, yosemiteTex, tigerTex, starTex, treeTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
+let div_value;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -231,36 +232,7 @@ function drawModel() {
     drawPyramid(gl);
   }
 
-  var x = eye[0];
-  var y = eye[1];
-  var z = eye[2];
-  var div_value = 1.2;
-  vec = [x, y, z]; //position of the gun in the scene
-  var scale_amount = [1, 1, 1];
-  const rotate_axis = [0.0, 1.0, 0.0];
-  const rotate_axis1 = [0.0, 0.0, 1.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -0.1 - rotY,
-    rotate_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -rotZ / div_value,
-    rotate_axis1
-  ); //NOTE: angle in radians
-  model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
-  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
-  console.log("rotY cos: " + Math.cos(rotY));
-  console.log("rotY sin: " + Math.sin(rotY));
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  drawGun(gl); //defined in gun.js
+ 
 
   // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
@@ -316,6 +288,38 @@ function drawModel() {
   //the third parameter (in this case 10.0) is the value to use for the shininess coefficient
   //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
 
+  var x = eye[0];
+  var y = eye[1];
+  var z = eye[2];
+  div_value = 1.2;
+  vec = [x, y, z]; //position of the gun in the scene
+  var scale_amount = [1, 1, 1];
+  const rotate_axis = [0.0, 1.0, 0.0];
+  const rotate_axis1 = [0.0, 0.0, 1.0];
+  const rotate_axis2 = [1.0, 0.0, 0.0];
+  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
+  model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -0.1 - rotY,
+    rotate_axis
+  ); //NOTE: angle in radians
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -rotZ/div_value,
+    rotate_axis1
+  ); //NOTE: angle in radians
+  model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
+  model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
+  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
+  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
+  console.log("rotY : " + (rotY));
+  console.log("rotZ : " + (rotZ));
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
+  drawGun(gl); //defined in gun.js
+  
   // *** Activate and bind uniform variables for the point_sprite_program shader ***
   changeShaderProgram(
     point_sprite_program,
@@ -341,14 +345,21 @@ function drawModel() {
   model_matrix = mat4.rotate(
     model_matrix,
     model_matrix,
-    -rotZ / div_value,
+    -rotZ/div_value,
     rotate_axis1
   ); //NOTE: angle in radians
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+   -rotZ/div_value, 
+    rotate_axis2
+  ); //NOTE: angle in radians
+  
   var vec1 = [1, 0, -0.11];
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, starTex);
-  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
+  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite crosshairs
 
   //TODO 5: bind your texture, then position and draw a point sprite using your own image as the texture
 
@@ -404,6 +415,7 @@ function initModel(view) {
     aim.push(0.0);
     aim.push(0.0);
     updateEye(0.1); //will sets aim to be looking down the positive z-axis
+    div_value = 1.2;
 
     return gl;
   }
@@ -428,26 +440,22 @@ function updateEyeX(offset) {
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1] + -rotZ;
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
 function updateRotY(offset) {
   rotY = rotY + offset;
-
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1]  + (-rotZ); 
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
 function updateRotZ(offset)
 {
     rotZ = rotZ + offset;
-//     //Adjust the aim position based on the new rotZ
+ //Adjust the aim position based on the new rotZ
     if (rotZ > -2.5 && rotZ < 2.5){
         aim[1] = eye[1] + (-rotZ);
-        //rotZ = rotZ + offset;
     }
     else if (rotZ <= -2.5){
         rotZ = -2.49;
@@ -479,4 +487,5 @@ function resetModel() {
   offsetGunX = 0.1;
   gunPos = [2.25, -1.5, 0.8];
   gunRot = 0;
+  div_value = 1.2;
 }
