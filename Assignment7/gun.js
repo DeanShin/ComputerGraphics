@@ -54,7 +54,10 @@ function initGun(gl) {
     ...[1, 1.5, 0.25], //v40
     ...[-1, 1.5, 0.25], //v41
   ];
-
+  const tex_coords = [0, 0,
+    0, 1,
+    1, 0,
+    1, 1 ];
   //Set up Vertex Array Object
   VAO = gl.createVertexArray();
   gl.bindVertexArray(VAO);
@@ -66,6 +69,11 @@ function initGun(gl) {
   gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(0); //vertex position will be passed to the vertex shader in location 0
 
+  var tcBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, tcBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(tex_coords), gl.STATIC_DRAW);
+  gl.vertexAttribPointer(4, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(4);
   //Clean
   gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -79,9 +87,9 @@ function drawGun(gl) {
   gl.vertexAttrib1f(3, 1); //use a static vertex attribute (location == 3) to set shininess for all polygons to 1.0
 
   //all triangles and points will have the same normal vector, so we will set it once with a static vertex attribute
-  gl.vertexAttrib3f(2, 0, 0, 1); //use a static vertex attribute (location == 2) to set the normal vector
+  gl.vertexAttrib3f(2, 1, 1, 0); //use a static vertex attribute (location == 2) to set the normal vector
 
-  gl.vertexAttrib3f(1, 0.0, 0.0, 1); //use a static vertex attribute (location == 1) to set the color to black/grey
+  //gl.vertexAttrib3f(1, 1, 1, 1); //use a static vertex attribute (location == 1) to set the color to black/grey
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 42);
 
   //Clean

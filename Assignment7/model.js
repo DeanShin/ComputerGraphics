@@ -18,7 +18,7 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let glacierTex, yosemiteTex, tigerTex, starTex, treeTex;
+let glacierTex, yosemiteTex, tigerTex, starTex, gunTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -127,9 +127,9 @@ function initLights(program) {
   var lightPosLoc = gl.getUniformLocation(program, "light_position");
 
   //set up the light for the scene
-  gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1); //minimum light level in the scene
-  gl.uniform4f(lightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the light (in this case it is white)
-  gl.uniform4f(lightPosLoc, 10.0, 4.0, 10.0, 1.0); //positional light since w = 1
+  gl.uniform3f(globalAmbientLightLoc, 0.5, 0.5, 0.5); //minimum light level in the scene
+  gl.uniform4f(lightColorLoc, 0.2, 0.2, 0.2, 1.0); //color of the light (in this case it is white)
+  gl.uniform4f(lightPosLoc, 20.0, 20.0, 20.0, 1.0); //positional light since w = 1
 }
 
 //This function was written to assist with changing the active shader program and binding uniform locations to correct values
@@ -147,6 +147,7 @@ function changeShaderProgram(program, lights, projection, view, model) {
 //initialize all of the buffers we need for our program
 function initBuffers() {
   initGround(gl); //defined in ground.js
+  initWall(gl);
   initPyramid(gl); //define in pyrmaid.js
   initCube(gl); //defined in cube.js
   initTexSquare(gl); //defined in texsquare.js
@@ -177,7 +178,7 @@ function initTextures() {
   yosemiteTex = initTex("yosemite", yosemiteTex); //the image with id 'yosemite' was loaded in Lab10.html
   tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
-  treeTex = initTex("tree", treeTex); //the image with id 'tree' was loaded in Lab10.html
+  gunTex = initTex("gun", gunTex); //the image with id 'tree' was loaded in Lab10.html
   //TODO 4 and 5: initialize your own textures here
 
   gl.bindTexture(gl.TEXTURE_2D, null);
@@ -205,7 +206,6 @@ function drawModel() {
   const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
   gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
 
-  drawGround(gl); //draw the model of the ground, defined in ground.js
 
   //position and then draw the cube
   var vec = [12.0, 1.0, 12.0]; //position of the cube in the scene
@@ -245,37 +245,6 @@ function drawModel() {
     drawPyramid(gl);
   }
 
-  var x = eye[0];
-  var y = eye[1];
-  var z = eye[2];
-  var div_value = 1.2;
-  vec = [x, y, z]; //position of the gun in the scene
-  var scale_amount = [1, 1, 1];
-  const rotate_axis = [0.0, 1.0, 0.0];
-  const rotate_axis1 = [0.0, 0.0, 1.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -0.1 - rotY,
-    rotate_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -rotZ / div_value,
-    rotate_axis1
-  ); //NOTE: angle in radians
-  model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
-  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
-  console.log("rotY cos: " + Math.cos(rotY));
-  console.log("rotY sin: " + Math.sin(rotY));
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  drawGun(gl); //defined in gun.js
-
   // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
     phong_tex_program,
@@ -286,10 +255,19 @@ function drawModel() {
   );
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
   var samplerLoc = gl.getUniformLocation(phong_tex_program, "tex_image"); //bind samplerLoc for this shader
-
-  //Set up gl.TEXTURE0 as the active texture
   gl.activeTexture(gl.TEXTURE0); //Set the current texture number
   gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
+  gl.bindTexture(gl.TEXTURE_2D, glacierTex); //use the glacierTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawGround(gl); //draw the model of the ground, defined in ground.js
+  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawWall(gl,1);
+  //Set up gl.TEXTURE0 as the active texture
+  // gl.activeTexture(gl.TEXTURE0); //Set the current texture number
+  // gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
 
   //position and draw the first textured square with the glacier texture
   const y_axis = [0.0, 1.0, 0.0];
@@ -329,7 +307,40 @@ function drawModel() {
   drawTexSquare(gl, color, 10.0); //the second parameter (color) is the color of the polygon before the texture is applied
   //the third parameter (in this case 10.0) is the value to use for the shininess coefficient
   //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
-
+  var x = eye[0];
+  var y = eye[1];
+  var z = eye[2];
+  var div_value = 1.2;
+  vec = [x, y, z]; //position of the gun in the scene
+  var scale_amount = [1, 1, 1];
+  const rotate_axis = [0.0, 1.0, 0.0];
+  const rotate_axis1 = [0.0, 0.0, 1.0];
+  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
+  model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -0.1 - rotY,
+    rotate_axis
+  ); //NOTE: angle in radians
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -rotZ / div_value,
+    rotate_axis1
+  ); //NOTE: angle in radians
+  model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
+  model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
+  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
+  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
+  console.log("rotY: " + rotY);
+  console.log("rotZ: " + rotZ);
+  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
+  gl.bindTexture(gl.TEXTURE_2D, gunTex); //use the glacierTex for this square
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT);
+  drawGun(gl); //defined in gun.js
   // *** Activate and bind uniform variables for the point_sprite_program shader ***
   changeShaderProgram(
     point_sprite_program,
@@ -431,7 +442,7 @@ function updateEye(offset) {
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1] + -rotZ;
+  //aim[1] = eye[1] + -rotZ;
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
@@ -442,7 +453,7 @@ function updateEyeX(offset) {
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1] + -rotZ;
+  //aim[1] = eye[1] + -rotZ;
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
@@ -451,7 +462,6 @@ function updateRotY(offset) {
 
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1] + -rotZ;
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
