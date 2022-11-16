@@ -6,7 +6,7 @@
 
 //These variables can be accessed in any function
 let gl;
-let phong_tex_program, toon_program, point_sprite_program;
+let phong_tex_program, toon_program, point_sprite_program, fog_program;
 let projection_matrix,
   view_matrix,
   model_matrix,
@@ -93,6 +93,18 @@ function initPrograms() {
   gl.attachShader(point_sprite_program, fragmentShader3); //Attach the fragment shader to this program
   gl.linkProgram(point_sprite_program);
   if (!gl.getProgramParameter(point_sprite_program, gl.LINK_STATUS)) {
+    console.error("Could not initialize point_sprite_program shaders");
+  }
+
+  //Load, compile, and link the shader code for the fog_program
+  const vertexShader4 = getShader("toon-vertex-shader");
+  const fragmentShader4 = getShader("fog-fragment-shader");
+  fog_program = gl.createProgram();
+
+  gl.attachShader(fog_program, vertexShader4);
+  gl.attachShader(fog_program, fragmentShader4);
+  gl.linkProgram(fog_program);
+  if (!gl.getProgramParameter(fog_program, gl.LINK_STATUS)) {
     console.error("Could not initialize point_sprite_program shaders");
   }
 }
@@ -184,13 +196,15 @@ function drawModel() {
 
   // *** Set the active shader program to the toon shader, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
-    toon_program,
+    fog_program,
     1,
     projection_matrix,
     view_matrix,
     mat4.identity(model_matrix)
   );
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
+  const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
+  gl.uniform4f(fogColorLoc, 0, 0, 0, 1);
 
 
   //position and then draw the cube
@@ -448,24 +462,20 @@ function updateRotY(offset) {
 
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  //aim[1] = eye[1]  + (-rotZ); 
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
-function updateRotZ(offset)
-{
-    rotZ = rotZ + offset;
-//     //Adjust the aim position based on the new rotZ
-    if (rotZ > -2.5 && rotZ < 2.5){
-        aim[1] = eye[1] + (-rotZ);
-        //rotZ = rotZ + offset;
-    }
-    else if (rotZ <= -2.5){
-        rotZ = -2.49;
-    }
-    else{
-        rotZ = 2.49;
-    }
+function updateRotZ(offset) {
+  rotZ = rotZ + offset;
+  //     //Adjust the aim position based on the new rotZ
+  if (rotZ > -2.5 && rotZ < 2.5) {
+    aim[1] = eye[1] + -rotZ;
+    //rotZ = rotZ + offset;
+  } else if (rotZ <= -2.5) {
+    rotZ = -2.49;
+  } else {
+    rotZ = 2.49;
+  }
 }
 
 function aimDownSights(check) {
