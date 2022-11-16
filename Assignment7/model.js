@@ -6,7 +6,11 @@
 
 //These variables can be accessed in any function
 let gl;
-let phong_tex_program, toon_program, point_sprite_program, fog_program;
+let phong_tex_program,
+  toon_program,
+  point_sprite_program,
+  fog_program,
+  ui_program;
 let projection_matrix,
   view_matrix,
   model_matrix,
@@ -18,7 +22,7 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let glacierTex, yosemiteTex, tigerTex, starTex, gunTex;
+let glacierTex, yosemiteTex, tigerTex, starTex, gunTex, winTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -105,7 +109,17 @@ function initPrograms() {
   gl.attachShader(fog_program, fragmentShader4);
   gl.linkProgram(fog_program);
   if (!gl.getProgramParameter(fog_program, gl.LINK_STATUS)) {
-    console.error("Could not initialize point_sprite_program shaders");
+    console.error("Could not initialize fog_program shaders");
+  }
+
+  const vertexShader5 = getShader("ui-vertex-shader");
+  const fragmentShader5 = getShader("ui-fragment-shader");
+  ui_program = gl.createProgram();
+  gl.attachShader(ui_program, vertexShader5);
+  gl.attachShader(ui_program, fragmentShader5);
+  gl.linkProgram(ui_program);
+  if (!gl.getProgramParameter(ui_program, gl.LINK_STATUS)) {
+    console.error("Could not initialize ui_program shaders");
   }
 }
 
@@ -178,8 +192,8 @@ function initTextures() {
   yosemiteTex = initTex("yosemite", yosemiteTex); //the image with id 'yosemite' was loaded in Lab10.html
   tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
-  gunTex = initTex("gun", gunTex); //the image with id 'tree' was loaded in Lab10.html
-  //TODO 4 and 5: initialize your own textures here
+  gunTex = initTex("gun", gunTex); //the image with id 'gun' was loaded in Lab10.html
+  winTex = initTex("win", winTex); //the iamge with id 'win' was loaded in Lab10.html
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -205,7 +219,6 @@ function drawModel() {
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
   const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
   gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
-
 
   //position and then draw the cube
   var vec = [12.0, 1.0, 12.0]; //position of the cube in the scene
@@ -264,7 +277,7 @@ function drawModel() {
   gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  drawWall(gl,1);
+  drawWall(gl, 1);
   //Set up gl.TEXTURE0 as the active texture
   // gl.activeTexture(gl.TEXTURE0); //Set the current texture number
   // gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
@@ -375,7 +388,14 @@ function drawModel() {
   gl.bindTexture(gl.TEXTURE_2D, starTex);
   gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
 
-  //TODO 5: bind your texture, then position and draw a point sprite using your own image as the texture
+  // Setup 2D program
+  gl.useProgram(ui_program);
+
+  if (game.state === GameState.WIN) {
+    gl.bindTexture(gl.TEXTURE_2D, winTex);
+    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (12,2.3,12)
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
 
   //Clean
   gl.bindVertexArray(null);

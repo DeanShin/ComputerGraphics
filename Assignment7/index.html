@@ -16,6 +16,7 @@ We are also loading additional JavaScript files to break the code up into more, 
 <img src="tiger.bmp" id="tiger" hidden />
 <img src="gun.png" id="gun" hidden />
 <img src="crosshair2.png" id="star" hidden />
+<img src="win.png" id="win" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
@@ -350,6 +351,33 @@ We are also loading additional JavaScript files to break the code up into more, 
             float distance = (1.0 - position.z / position.w);
             vec4 finalColor = mix(vec4(colorSum.r, colorSum.g, colorSum.b, color.a), fogColor, distance / 25.0);
             frag_color = finalColor;
+        }
+    </script>
+
+    <script id="ui-vertex-shader" type="shader.vert">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+  
+        layout (location = 0) in vec4 vPosition;
+  
+        void main()
+        {
+            gl_Position = vec4(vPosition.x, vPosition.y, 0.0, 1.0);
+            gl_PointSize = 100.0;
+        }
+      </script>
+
+    <script id="ui-fragment-shader" type="shader.frag">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+        precision mediump float;  //specifies "medium precision"
+  
+        uniform sampler2D tex_image; //Support for texture mapping
+
+        out vec4 frag_color; //this will be the fragment's color
+  
+        void main()
+        {
+            vec4 color = texture(tex_image, gl_PointCoord);
+            frag_color = color;
         }
     </script>
 
