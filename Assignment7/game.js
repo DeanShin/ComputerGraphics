@@ -131,8 +131,8 @@ class Game {
         new Target(
           new Vector3(
             randomInBounds(-5, 5),
-            randomInBounds(4, 6),
-            randomInBounds(1, 2)
+            randomInBounds(4, 10),
+            randomInBounds(-5, 5)
           ),
           randomInBounds(1, 3),
           activateAt,
@@ -175,6 +175,7 @@ class Game {
       ).length === 0
     ) {
       this.state = GameState.WIN;
+      this.bullets = [];
     }
   }
 

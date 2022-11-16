@@ -203,7 +203,7 @@ function drawModel() {
   );
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
   const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
-  gl.uniform4f(fogColorLoc, 0, 0, 0, 1);
+  gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
 
   drawGround(gl); //draw the model of the ground, defined in ground.js
 

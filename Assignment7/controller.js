@@ -16,21 +16,29 @@ let pressedKeys = {};
 
 function checkKey(event) {
   switch (event.keyCode) {
+    // left arrow / A
+    case 37:
     case 65: {
       updateEyeX(-0.4); //defined in model.js
       break;
     }
 
+    // up arrow / W
+    case 38:
     case 87: {
       updateEye(0.4); //defined in model.js
       break;
     }
 
+    // right arrow / D
+    case 39:
     case 68: {
       updateEyeX(0.4); //defined in model.js
       break;
     }
 
+    // down arrow / S
+    case 40:
     case 83: {
       updateEye(-0.4); //defined in model.js
       break;
@@ -38,6 +46,7 @@ function checkKey(event) {
 
     case 49: {
       resetModel(); //defined in model.js
+      break;
     }
 
     case 32: {
