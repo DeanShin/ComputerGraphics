@@ -4,9 +4,9 @@
 //Purpose:		This file defines the code for our controller
 //The "controller" runs the program and handles events.
 
-alert(
-  "- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press '1' to reset the scene"
-);
+// alert(
+//   "- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press '1' to reset the scene"
+// );
 
 let model;
 let view; //the "view" is our Canvas
@@ -42,7 +42,7 @@ function checkKey(event) {
 
     case 32: {
       game.fireBullet(
-        new Vector3(...eye),
+        new Vector3(...bulletOrigin),
         new Vector3(...smult(0.75, norm(sub(aim, eye))))
       );
     }

@@ -6,7 +6,7 @@
 
 //These variables can be accessed in any function
 let gl;
-let phong_tex_program, toon_program, point_sprite_program;
+let phong_tex_program, toon_program, point_sprite_program, fog_program;
 let projection_matrix,
   view_matrix,
   model_matrix,
@@ -22,6 +22,7 @@ let glacierTex, yosemiteTex, tigerTex, starTex, treeTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
+let bulletOrigin;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -95,6 +96,18 @@ function initPrograms() {
   if (!gl.getProgramParameter(point_sprite_program, gl.LINK_STATUS)) {
     console.error("Could not initialize point_sprite_program shaders");
   }
+
+  //Load, compile, and link the shader code for the fog_program
+  const vertexShader4 = getShader("toon-vertex-shader");
+  const fragmentShader4 = getShader("fog-fragment-shader");
+  fog_program = gl.createProgram();
+
+  gl.attachShader(fog_program, vertexShader4);
+  gl.attachShader(fog_program, fragmentShader4);
+  gl.linkProgram(fog_program);
+  if (!gl.getProgramParameter(fog_program, gl.LINK_STATUS)) {
+    console.error("Could not initialize point_sprite_program shaders");
+  }
 }
 
 //Find the locations of the matrices in the active shader program
@@ -115,7 +128,7 @@ function initLights(program) {
   var lightPosLoc = gl.getUniformLocation(program, "light_position");
 
   //set up the light for the scene
-  gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1); //minimum light level in the scene
+  // gl.uniform3f(globalAmbientLightLoc, 0.1, 0.1, 0.1); //minimum light level in the scene
   gl.uniform4f(lightColorLoc, 1.0, 1.0, 1.0, 1.0); //color of the light (in this case it is white)
   gl.uniform4f(lightPosLoc, 10.0, 4.0, 10.0, 1.0); //positional light since w = 1
 }
@@ -166,7 +179,6 @@ function initTextures() {
   tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
   treeTex = initTex("tree", treeTex); //the image with id 'tree' was loaded in Lab10.html
-  //TODO 4 and 5: initialize your own textures here
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -183,13 +195,15 @@ function drawModel() {
 
   // *** Set the active shader program to the toon shader, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
-    toon_program,
+    fog_program,
     1,
     projection_matrix,
     view_matrix,
     mat4.identity(model_matrix)
   );
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
+  const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
+  gl.uniform4f(fogColorLoc, 0, 0, 0, 1);
 
   drawGround(gl); //draw the model of the ground, defined in ground.js
 
@@ -231,11 +245,8 @@ function drawModel() {
     drawPyramid(gl);
   }
 
-  var x = eye[0];
-  var y = eye[1];
-  var z = eye[2];
   var div_value = 1.2;
-  vec = [x, y, z]; //position of the gun in the scene
+  vec = eye; //position of the gun in the scene
   var scale_amount = [1, 1, 1];
   const rotate_axis = [0.0, 1.0, 0.0];
   const rotate_axis1 = [0.0, 0.0, 1.0];
@@ -255,11 +266,14 @@ function drawModel() {
   ); //NOTE: angle in radians
   model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
   model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
-  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
-  console.log("rotY cos: " + Math.cos(rotY));
-  console.log("rotY sin: " + Math.sin(rotY));
+  // console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
+  // console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
+  // console.log("rotY cos: " + Math.cos(rotY));
+  // console.log("rotY sin: " + Math.sin(rotY));
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
+  const vec4 = glMatrix.vec4.fromValues(-0.75, 1, 0, 1);
+  glMatrix.vec4.transformMat4(vec4, vec4, model_matrix);
+  bulletOrigin = vec4;
   drawGun(gl); //defined in gun.js
 
   // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
@@ -314,7 +328,6 @@ function drawModel() {
   gl.bindTexture(gl.TEXTURE_2D, tigerTex); //use the tigerTex for this square
   drawTexSquare(gl, color, 10.0); //the second parameter (color) is the color of the polygon before the texture is applied
   //the third parameter (in this case 10.0) is the value to use for the shininess coefficient
-  //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
 
   // *** Activate and bind uniform variables for the point_sprite_program shader ***
   changeShaderProgram(
@@ -348,9 +361,11 @@ function drawModel() {
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, starTex);
-  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
+  gl.drawArrays(gl.POINTS, 0, 1);
 
-  //TODO 5: bind your texture, then position and draw a point sprite using your own image as the texture
+  gl.bindTexture(gl.TEXTURE_2D, treeTex);
+  gl.vertexAttrib3f(0, 12.0, 2.3, 12.0); //use a static vertex attribute (location == 0) to set the position to (12,2.3,12)
+  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (12,2.3,12)
 
   //Clean
   gl.bindVertexArray(null);
@@ -403,7 +418,7 @@ function initModel(view) {
     aim.push(0.0);
     aim.push(0.0);
     aim.push(0.0);
-    updateEye(0.1); //will sets aim to be looking down the positive z-axis
+    updateEye(10); //will sets aim to be looking down the positive z-axis
 
     return gl;
   }
@@ -437,24 +452,21 @@ function updateRotY(offset) {
 
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  aim[1] = eye[1]  + (-rotZ); 
+  aim[1] = eye[1] + -rotZ;
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
-function updateRotZ(offset)
-{
-    rotZ = rotZ + offset;
-//     //Adjust the aim position based on the new rotZ
-    if (rotZ > -2.5 && rotZ < 2.5){
-        aim[1] = eye[1] + (-rotZ);
-        //rotZ = rotZ + offset;
-    }
-    else if (rotZ <= -2.5){
-        rotZ = -2.49;
-    }
-    else{
-        rotZ = 2.49;
-    }
+function updateRotZ(offset) {
+  rotZ = rotZ + offset;
+  //     //Adjust the aim position based on the new rotZ
+  if (rotZ > -2.5 && rotZ < 2.5) {
+    aim[1] = eye[1] + -rotZ;
+    //rotZ = rotZ + offset;
+  } else if (rotZ <= -2.5) {
+    rotZ = -2.49;
+  } else {
+    rotZ = 2.49;
+  }
 }
 
 function aimDownSights(check) {
