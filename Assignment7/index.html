@@ -14,18 +14,18 @@ We are also loading additional JavaScript files to break the code up into more, 
 <img src="glacier.bmp" id="glacier" hidden />
 <img src="yosemite.bmp" id="yosemite" hidden />
 <img src="tiger.bmp" id="tiger" hidden />
-<img src="star.bmp" id="star" hidden />
 <img src="tree.bmp" id="tree" hidden />
+<img src="crosshair2.png" id="star" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
 -->
-<!-- TODO 4 and 5: Load your own image files here -->
 
 <html>
+
 <head>
-    <title>COMP 153 - Lab 10</title>
-    
+    <title>Assignment 7</title>
+
     <style type="text/css">
         canvas {
             border: 5px solid black;
@@ -33,6 +33,7 @@ We are also loading additional JavaScript files to break the code up into more, 
     </style>
 
     <!-- load the javascript files used in the program-->
+    <script src="game.js" defer></script>
     <script src="model.js" defer></script>
     <script src="view.js" defer></script>
     <script src="controller.js" defer></script>
@@ -40,9 +41,10 @@ We are also loading additional JavaScript files to break the code up into more, 
     <script src="cube.js" defer></script>
     <script src="texsquare.js" defer></script>
     <script src="pyramid.js" defer></script>
-    <!-- TODO 3: Load your own JavaScript file here-->
+    <script src="gun.js" defer></script>
 
-    <script src="gl-matrix.js" defer></script> <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
+    <script src="gl-matrix.js" defer></script>
+    <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
 
     <!-- Define the vertex and fragment shaders -->
     <script id="phong-tex-vertex-shader" type="shader.vert">
@@ -273,10 +275,6 @@ We are also loading additional JavaScript files to break the code up into more, 
         {  
             gl_PointSize = 50.0;  //NOTE: the value assigned to gl_PointSize must be a float
             gl_Position = projectionMatrix * viewMatrix * modelMatrix * vertexPosition;
-            //TODO: Comment out the two lines of code above and add the three lines below to scale size base on distance from the eye
-            //vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition.x, vertexPosition.y, vertexPosition.z, 1.0);
-            //gl_PointSize = (1.0 - pos.z / pos.w) * 1000.0; //set gl_PointSize for point sprites as a function of the distance from viewer
-            //gl_Position = pos;
         }
     </script>
     <script id="point-sprite-fragment-shader" type="shader.frag">
@@ -293,24 +291,81 @@ We are also loading additional JavaScript files to break the code up into more, 
             float threshold = 0.15;
             vec4 color = texture(tex_image, gl_PointCoord);
             frag_color = color;
-            //TODO: Add the two lines below to make the texture transparent where it is black (or at least very dark gray)
-            //if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
-            //    discard; //pretend this fragment doesn't exist (i.e. make it transparent)
+            if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
+                discard; //pretend this fragment doesn't exist (i.e. make it transparent)
+        }
+    </script>
+    <script id="fog-fragment-shader" type="shader.frag">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+        precision highp float; //specifies "high precision" - necessary to access the viewMatrix here
+        //The toon shader part of this code is adapted from: 
+        // www.lighthouse3d.com/tutorials/glsl-tutorial/toon-shading-version-iii/
+
+        //uniform variables
+        uniform vec3 globalAmbientLight;
+        uniform mat4 viewMatrix; //needed to transform the light positions into "eye" coordinates
+        uniform vec4 light_color; //color of light
+        uniform vec4 light_position; //location of light if w = 1, otherwise the direction towards the light
+        uniform vec4 fogColor;
+
+        in vec4 position; //position of the fragment in "eye" coordinates
+        in vec4 color; //surface color at the fragment
+        in vec3 normal; //normal vector at the fragment in "eye" coordinates
+
+        out vec4 frag_color; //resulting fragment color after lighting is applied
+
+        void main()
+        {
+            //Implement a toon shader for lighting
+            vec3 colorSum = vec3(0.0, 0.0, 0.0);
+            vec3 n = normalize(normal);
+            vec3 L; //this will be the vector towards the light
+            vec3 I = light_color.rgb;  //Intensity (color) of the light
+            vec4 lightPos_eyeCoords = viewMatrix*light_position; //put light_position in "eye" coordinates
+
+            if (light_position.w > 0.1) //a positional light
+            {
+                vec4 LTemp = lightPos_eyeCoords - position;  //Calculate the L vector
+                L = normalize(vec3(LTemp.x, LTemp.y, LTemp.z)); //remove the w value from the L vector and normalize
+            }
+            else //a directional light
+            {
+                //remove w value to form the L vector and normalize
+                L = normalize(vec3(lightPos_eyeCoords.x, lightPos_eyeCoords.y, lightPos_eyeCoords.z));
+            }
+
+            float intensity = dot(L,n);
+            if (intensity > 0.95)
+                colorSum += color.rgb * I * 1.0;
+            else if (intensity > .75)
+                colorSum += color.rgb * I * 0.75;
+            else if (intensity > .5)
+                colorSum += color.rgb * I * 0.5;
+            else if (intensity > 0.25)
+                colorSum += color.rgb * I * 0.25;
+            else
+                colorSum += color.rgb * I * 0.05;
+
+            colorSum = colorSum + globalAmbientLight*color.rgb;  //compute the final color of the fragment
+            float distance = (1.0 - position.z / position.w);
+            vec4 finalColor = mix(vec4(colorSum.r, colorSum.g, colorSum.b, color.a), fogColor, distance / 25.0);
+            frag_color = finalColor;
         }
     </script>
 
     <!-- Call our controller function from main once the document has loaded -->
     <script type="text/javascript">
-        function main()
-        {
+        function main() {
             controller(); //controller is defined in controller.js
         }
         window.onload = main; 
     </script>
 </head>
+
 <body>
-    <canvas id="webgl-canvas" width="600" height="600">
+    <canvas id="webgl-canvas" width="1920" height="1080">
         Your browser does not support the HTML5 canvas element.
     </canvas>
 </body>
+
 </html>
