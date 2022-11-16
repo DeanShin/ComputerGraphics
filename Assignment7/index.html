@@ -296,11 +296,12 @@ We are also loading additional JavaScript files to break the code up into more, 
         }
     </script>
     <script id="fog-fragment-shader" type="shader.frag">
-        #version 300 es
-        precision mediump float;
-        // See the section of the textbook titled "Point Sprites" for a discussion of point sprites
+        #version 300 es //specifies that we want OpenGL ES 3.0
+        precision highp float; //specifies "high precision" - necessary to access the viewMatrix here
+        //The toon shader part of this code is adapted from: 
+        // www.lighthouse3d.com/tutorials/glsl-tutorial/toon-shading-version-iii/
 
-        // uniform variabless
+        //uniform variables
         uniform vec3 globalAmbientLight;
         uniform mat4 viewMatrix; //needed to transform the light positions into "eye" coordinates
         uniform vec4 light_color; //color of light
@@ -310,15 +311,45 @@ We are also loading additional JavaScript files to break the code up into more, 
         in vec4 position; //position of the fragment in "eye" coordinates
         in vec4 color; //surface color at the fragment
         in vec3 normal; //normal vector at the fragment in "eye" coordinates
-        in float shininess; //shininess of the surface at the fragment
-        in vec2 vs_tex_coord;
 
         out vec4 frag_color; //resulting fragment color after lighting is applied
 
         void main()
         {
+            //Implement a toon shader for lighting
+            vec3 colorSum = vec3(0.0, 0.0, 0.0);
+            vec3 n = normalize(normal);
+            vec3 L; //this will be the vector towards the light
+            vec3 I = light_color.rgb;  //Intensity (color) of the light
+            vec4 lightPos_eyeCoords = viewMatrix*light_position; //put light_position in "eye" coordinates
+
+            if (light_position.w > 0.1) //a positional light
+            {
+                vec4 LTemp = lightPos_eyeCoords - position;  //Calculate the L vector
+                L = normalize(vec3(LTemp.x, LTemp.y, LTemp.z)); //remove the w value from the L vector and normalize
+            }
+            else //a directional light
+            {
+                //remove w value to form the L vector and normalize
+                L = normalize(vec3(lightPos_eyeCoords.x, lightPos_eyeCoords.y, lightPos_eyeCoords.z));
+            }
+
+            float intensity = dot(L,n);
+            if (intensity > 0.95)
+                colorSum += color.rgb * I * 1.0;
+            else if (intensity > .75)
+                colorSum += color.rgb * I * 0.75;
+            else if (intensity > .5)
+                colorSum += color.rgb * I * 0.5;
+            else if (intensity > 0.25)
+                colorSum += color.rgb * I * 0.25;
+            else
+                colorSum += color.rgb * I * 0.05;
+
+            colorSum = colorSum + globalAmbientLight*color.rgb;  //compute the final color of the fragment
             float distance = (1.0 - position.z / position.w);
-            frag_color = mix(color, fogColor, distance / 25.0);
+            vec4 finalColor = mix(vec4(colorSum.r, colorSum.g, colorSum.b, color.a), fogColor, distance / 25.0);
+            frag_color = finalColor;
         }
     </script>
 
