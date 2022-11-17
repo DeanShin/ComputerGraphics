@@ -354,10 +354,6 @@ function drawModel() {
   ); //NOTE: angle in radians
   model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
   model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
-  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
-  console.log("rotY: " + rotY);
-  console.log("rotZ: " + rotZ);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, gunTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -402,12 +398,12 @@ function drawModel() {
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, starTex);
+  gl.vertexAttrib3f(0, 0, 0, 0);
   gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
 
   // Setup 2D program
   gl.useProgram(ui_program);
 
-  console.log(game.state);
   if (game.state === GameState.WIN) {
     gl.bindTexture(gl.TEXTURE_2D, winTex);
     gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
@@ -473,7 +469,7 @@ function initModel(view) {
     rotZ = 0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis
     offsetGun = 0.1;
     offsetGunX = 0.1;
-    div_value = 1.2
+    div_value = 1.2;
     eye.push(0.0);
     eye.push(5.0);
     eye.push(-10.0);
@@ -552,5 +548,5 @@ function resetModel() {
   offsetGunX = 0.1;
   gunPos = [2.25, -1.5, 0.8];
   gunRot = 0;
-  div_value = 1.2
+  div_value = 1.2;
 }
