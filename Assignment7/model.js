@@ -18,7 +18,7 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let glacierTex, yosemiteTex, tigerTex, starTex, gunTex, bulletTex, targetTex;
+let floorTex, yosemiteTex, tigerTex, starTex, gunTex, bulletTex, targetTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -164,7 +164,7 @@ function initTex(id, tex) {
 
 //Initialize textures to be used in the program
 function initTextures() {
-  glacierTex = initTex("glacier", glacierTex); //the image with id 'glacier' was loaded in Lab10.html
+  floorTex = initTex("glacier", floorTex); //the image with id 'glacier' was loaded in Lab10.html
   yosemiteTex = initTex("yosemite", yosemiteTex); //the image with id 'yosemite' was loaded in Lab10.html
   tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
@@ -223,11 +223,11 @@ function drawModel() {
   var samplerLoc = gl.getUniformLocation(phong_tex_program, "tex_image"); //bind samplerLoc for this shader
   gl.activeTexture(gl.TEXTURE0); //Set the current texture number
   gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
-  gl.bindTexture(gl.TEXTURE_2D, glacierTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, floorTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawGround(gl); //draw the model of the ground, defined in ground.js
-  gl.bindTexture(gl.TEXTURE_2D, glacierTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, floorTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawRoof(gl); //draw the model of the ground, defined in ground.js
