@@ -204,8 +204,8 @@ function initTextures() {
   floorTex = initTex("floor", floorTex); //the image with id 'glacier' was loaded in Lab10.html
   wallTex = initTex("wall", wallTex); //the image with id 'yosemite' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
-  bulletTex = initTex("bullet", bulletTex); 
-  targetTex=initTex("target", targetTex);
+  bulletTex = initTex("bullet", bulletTex);
+  targetTex = initTex("target", targetTex);
   gunTex = initTex("gun", gunTex); //the image with id 'gun' was loaded in Lab10.html
   winTex = initTex("win", winTex); //the iamge with id 'win' was loaded in Lab10.html
   loseTex = initTex("lose", loseTex);
@@ -236,7 +236,7 @@ function drawModel() {
   //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
   const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
   gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
-  
+
   for (const bullet of game.bullets) {
     const vec = [bullet.position.x, bullet.position.y, bullet.position.z];
     model_matrix = mat4.translate(
@@ -245,11 +245,11 @@ function drawModel() {
       vec
     );
     var vec1 = [-1.1, -0.05, 1.2];
-    model_matrix = mat4.scale(model_matrix, model_matrix, [0.01 , 0.03, 0.01]);
+    model_matrix = mat4.scale(model_matrix, model_matrix, [0.03, 0.05, 0.03]);
     model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
     gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
     drawBullet(gl); //draw one point sprite at (0,5.0,0)
-  } 
+  }
 
   // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
@@ -276,19 +276,19 @@ function drawModel() {
   gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  drawWall(gl,1);
+  drawWall(gl, 1);
   gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  drawWall(gl,2);
+  drawWall(gl, 2);
   gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  drawWall(gl,3);
+  drawWall(gl, 3);
   gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  drawWall(gl,4);
+  drawWall(gl, 4);
   //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
   var x = eye[0];
   var y = eye[1];
