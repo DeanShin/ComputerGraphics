@@ -5,7 +5,7 @@
 //The "controller" runs the program and handles events.
 
 // alert(
-//   "- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press 'R' to reset the game"
+//   "Hit 20 or more targets to win the game!\n- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press 'R' to reset the game."
 // );
 
 let model;

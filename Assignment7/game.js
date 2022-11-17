@@ -118,6 +118,7 @@ const distance = (position1, position2) => {
 const GameState = {
   ACTIVE: "ACTIVE",
   WIN: "WIN",
+  LOSE: "LOSE",
 };
 
 class Game {
@@ -174,7 +175,14 @@ class Game {
           target.state === TargetState.INACTIVE
       ).length === 0
     ) {
-      this.state = GameState.WIN;
+      if (
+        this.targets.filter((target) => target.state === TargetState.HIT)
+          .length >= 25
+      ) {
+        this.state = GameState.WIN;
+      } else {
+        this.state = GameState.LOSE;
+      }
       this.bullets = [];
     }
   }

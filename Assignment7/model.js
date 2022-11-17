@@ -22,7 +22,14 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let glacierTex, yosemiteTex, tigerTex, starTex, gunTex, winTex;
+let glacierTex,
+  yosemiteTex,
+  tigerTex,
+  starTex,
+  gunTex,
+  winTex,
+  loseTex,
+  restartTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -194,6 +201,8 @@ function initTextures() {
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
   gunTex = initTex("gun", gunTex); //the image with id 'gun' was loaded in Lab10.html
   winTex = initTex("win", winTex); //the iamge with id 'win' was loaded in Lab10.html
+  loseTex = initTex("lose", loseTex);
+  restartTex = initTex("restart", restartTex);
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -391,11 +400,26 @@ function drawModel() {
   // Setup 2D program
   gl.useProgram(ui_program);
 
+  console.log(game.state);
   if (game.state === GameState.WIN) {
     gl.bindTexture(gl.TEXTURE_2D, winTex);
-    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (12,2.3,12)
+    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
+    gl.drawArrays(gl.POINTS, 0, 1);
+  } else if (game.state === GameState.LOSE) {
+    gl.bindTexture(gl.TEXTURE_2D, loseTex);
+    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
     gl.drawArrays(gl.POINTS, 0, 1);
   }
+
+  if (game.state === GameState.WIN || game.state === GameState.LOSE) {
+    gl.bindTexture(gl.TEXTURE_2D, restartTex);
+    gl.vertexAttrib3f(0, 0, 0.5, 0);
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
+
+  document.getElementById("score").innerHTML = game.targets.filter(
+    (target) => target.state === TargetState.HIT
+  ).length;
 
   //Clean
   gl.bindVertexArray(null);

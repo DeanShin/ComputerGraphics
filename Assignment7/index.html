@@ -17,6 +17,8 @@ We are also loading additional JavaScript files to break the code up into more, 
 <img src="gun.png" id="gun" hidden />
 <img src="crosshair2.png" id="star" hidden />
 <img src="win.png" id="win" hidden />
+<img src="lose.png" id="lose" hidden />
+<img src="restart.png" id="restart" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
@@ -27,11 +29,7 @@ We are also loading additional JavaScript files to break the code up into more, 
 <head>
     <title>Assignment 7</title>
 
-    <style type="text/css">
-        canvas {
-            border: 5px solid black;
-        }
-    </style>
+    <link rel="stylesheet" href="./styles.css" />
 
     <!-- load the javascript files used in the program-->
     <script src="game.js" defer></script>
@@ -362,7 +360,7 @@ We are also loading additional JavaScript files to break the code up into more, 
         void main()
         {
             gl_Position = vec4(vPosition.x, vPosition.y, 0.0, 1.0);
-            gl_PointSize = 100.0;
+            gl_PointSize = 500.0;
         }
       </script>
 
@@ -391,9 +389,14 @@ We are also loading additional JavaScript files to break the code up into more, 
 </head>
 
 <body>
-    <canvas id="webgl-canvas" width="1920" height="1080">
-        Your browser does not support the HTML5 canvas element.
-    </canvas>
+    <div>
+        <canvas id="webgl-canvas" width="1920" height="1080">
+
+            Your browser does not support the HTML5 canvas element.
+        </canvas>
+        <h1>Targets hit: <span id="score">0</span>/30</h1>
+    </div>
+
 </body>
 
 </html>
