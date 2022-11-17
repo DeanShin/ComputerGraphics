@@ -1,0 +1,21 @@
+* {
+    margin: 0;
+}
+
+div {
+    position: relative;
+}
+
+canvas {
+    border: 5px solid black;
+}
+
+h1 {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    text-align: center;
+    color: white;
+    background-color: black;
+    font-size: 5em;
+}

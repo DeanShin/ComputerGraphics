@@ -5,7 +5,7 @@
 //The "controller" runs the program and handles events.
 
 alert(
-  "- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press '1' to reset the scene"
+  "Hit 25 or more targets to win the game!\n- Hit 'f' to enter Fullscreen Mode \n- Click the left mouse button to lock the aim/cursor \n- Move the Mouse to aim/look around scene \n- Use 'wasd' to control the player movement \n- Hold down 'shift' to aim down the sights of the gun \n- Press 'R' to reset the game.\n- Press 'space' to shoot the gun"
 );
 
 let model;
@@ -16,35 +16,48 @@ let pressedKeys = {};
 
 function checkKey(event) {
   switch (event.keyCode) {
+    // left arrow / 'A' key
+    case 37:
     case 65: {
       updateEyeX(-0.4); //defined in model.js
       break;
     }
 
+    // up arrow / 'W' key
+    case 38:
     case 87: {
       updateEye(0.4); //defined in model.js
       break;
     }
 
+    // right arrow / 'D' key
+    case 39:
     case 68: {
       updateEyeX(0.4); //defined in model.js
       break;
     }
 
+    // down arrow / 'S' key
+    case 40:
     case 83: {
       updateEye(-0.4); //defined in model.js
       break;
     }
 
-    case 49: {
-      resetModel(); //defined in model.js
-    }
-
+    // 'Space' key
     case 32: {
       game.fireBullet(
         new Vector3(...eye),
-        new Vector3(...smult(0.75, norm(sub(aim, eye))))
+        new Vector3(...smult(2, norm(sub(aim, eye))))
       );
+      break;
+    }
+
+    // 'R' key
+    case 82: {
+      resetModel();
+      game = new Game();
+      break;
     }
   }
   //redraw the scene so that we can see changes

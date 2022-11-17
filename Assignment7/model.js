@@ -6,7 +6,11 @@
 
 //These variables can be accessed in any function
 let gl;
-let phong_tex_program, toon_program, point_sprite_program;
+let phong_tex_program,
+  toon_program,
+  point_sprite_program,
+  fog_program,
+  ui_program;
 let projection_matrix,
   view_matrix,
   model_matrix,
@@ -18,7 +22,18 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let floorTex, wallTex, tigerTex, starTex, gunTex, bulletTex, targetTex;
+let glacierTex,
+  yosemiteTex,
+  tigerTex,
+  starTex,
+  gunTex,
+  winTex,
+  loseTex,
+  restartTex,
+  floorTex,
+  wallTex,
+  targetTex,
+  bulletTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -95,6 +110,28 @@ function initPrograms() {
   if (!gl.getProgramParameter(point_sprite_program, gl.LINK_STATUS)) {
     console.error("Could not initialize point_sprite_program shaders");
   }
+
+  //Load, compile, and link the shader code for the fog_program
+  const vertexShader4 = getShader("toon-vertex-shader");
+  const fragmentShader4 = getShader("fog-fragment-shader");
+  fog_program = gl.createProgram();
+
+  gl.attachShader(fog_program, vertexShader4);
+  gl.attachShader(fog_program, fragmentShader4);
+  gl.linkProgram(fog_program);
+  if (!gl.getProgramParameter(fog_program, gl.LINK_STATUS)) {
+    console.error("Could not initialize fog_program shaders");
+  }
+
+  const vertexShader5 = getShader("ui-vertex-shader");
+  const fragmentShader5 = getShader("ui-fragment-shader");
+  ui_program = gl.createProgram();
+  gl.attachShader(ui_program, vertexShader5);
+  gl.attachShader(ui_program, fragmentShader5);
+  gl.linkProgram(ui_program);
+  if (!gl.getProgramParameter(ui_program, gl.LINK_STATUS)) {
+    console.error("Could not initialize ui_program shaders");
+  }
 }
 
 //Find the locations of the matrices in the active shader program
@@ -167,10 +204,12 @@ function initTextures() {
   floorTex = initTex("floor", floorTex); //the image with id 'glacier' was loaded in Lab10.html
   wallTex = initTex("wall", wallTex); //the image with id 'yosemite' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
-  gunTex = initTex("gun", gunTex); //the image with id 'tree' was loaded in Lab10.html
   bulletTex = initTex("bullet", bulletTex); 
   targetTex=initTex("target", targetTex);
-  //TODO 4 and 5: initialize your own textures here
+  gunTex = initTex("gun", gunTex); //the image with id 'gun' was loaded in Lab10.html
+  winTex = initTex("win", winTex); //the iamge with id 'win' was loaded in Lab10.html
+  loseTex = initTex("lose", loseTex);
+  restartTex = initTex("restart", restartTex);
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -187,13 +226,17 @@ function drawModel() {
 
   // *** Set the active shader program to the toon shader, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
-    toon_program,
+    fog_program,
     1,
     projection_matrix,
     view_matrix,
     mat4.identity(model_matrix)
   );
-    
+
+  //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
+  const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
+  gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
+  
   for (const bullet of game.bullets) {
     const vec = [bullet.position.x, bullet.position.y, bullet.position.z];
     model_matrix = mat4.translate(
@@ -255,6 +298,7 @@ function drawModel() {
   var scale_amount = [1, 1, 1];
   const rotate_axis = [0.0, 1.0, 0.0];
   const rotate_axis1 = [0.0, 0.0, 1.0];
+  const rotate_axis2 = [1.0, 0.0, 0.0];
   model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
   model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
   model_matrix = mat4.rotate(
@@ -271,10 +315,6 @@ function drawModel() {
   ); //NOTE: angle in radians
   model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
   model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  console.log("aim 0: " + aim[0] + "  aim 1: " + aim[1] + "  aim 2: " + aim[2]);
-  console.log("eye 0: " + eye[0] + "  eye 1: " + eye[1] + "  eye 2: " + eye[2]);
-  console.log("rotY: " + rotY);
-  console.log("rotZ: " + rotZ);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, gunTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -321,13 +361,41 @@ function drawModel() {
     -rotZ / div_value,
     rotate_axis1
   ); //NOTE: angle in radians
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -rotZ / div_value,
+    rotate_axis2
+  ); //NOTE: angle in radians
   var vec1 = [1, 0, -0.11];
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
   gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
   gl.bindTexture(gl.TEXTURE_2D, starTex);
+  gl.vertexAttrib3f(0, 0, 0, 0);
   gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
 
-  //TODO 5: bind your texture, then position and draw a point sprite using your own image as the texture
+  // Setup 2D program
+  gl.useProgram(ui_program);
+
+  if (game.state === GameState.WIN) {
+    gl.bindTexture(gl.TEXTURE_2D, winTex);
+    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
+    gl.drawArrays(gl.POINTS, 0, 1);
+  } else if (game.state === GameState.LOSE) {
+    gl.bindTexture(gl.TEXTURE_2D, loseTex);
+    gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
+
+  if (game.state === GameState.WIN || game.state === GameState.LOSE) {
+    gl.bindTexture(gl.TEXTURE_2D, restartTex);
+    gl.vertexAttrib3f(0, 0, 0.5, 0);
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
+
+  document.getElementById("score").innerHTML = game.targets.filter(
+    (target) => target.state === TargetState.HIT
+  ).length;
 
   //Clean
   gl.bindVertexArray(null);
@@ -374,6 +442,7 @@ function initModel(view) {
     rotZ = 0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis
     offsetGun = 0.1;
     offsetGunX = 0.1;
+    div_value = 1.2;
     eye.push(0.0);
     eye.push(5.0);
     eye.push(-10.0);
@@ -414,24 +483,20 @@ function updateRotY(offset) {
 
   //Adjust the aim position based on the new rotY
   aim[0] = eye[0] + Math.cos(rotY);
-  //aim[1] = eye[1]  + (-rotZ); 
   aim[2] = eye[2] + Math.sin(rotY);
 }
 
-function updateRotZ(offset)
-{
-    rotZ = rotZ + offset;
-//     //Adjust the aim position based on the new rotZ
-    if (rotZ > -2.5 && rotZ < 2.5){
-        aim[1] = eye[1] + (-rotZ);
-        //rotZ = rotZ + offset;
-    }
-    else if (rotZ <= -2.5){
-        rotZ = -2.49;
-    }
-    else{
-        rotZ = 2.49;
-    }
+function updateRotZ(offset) {
+  rotZ = rotZ + offset;
+  //     //Adjust the aim position based on the new rotZ
+  if (rotZ > -2.5 && rotZ < 2.5) {
+    aim[1] = eye[1] + -rotZ;
+    //rotZ = rotZ + offset;
+  } else if (rotZ <= -2.5) {
+    rotZ = -2.49;
+  } else {
+    rotZ = 2.49;
+  }
 }
 
 function aimDownSights(check) {
@@ -456,4 +521,5 @@ function resetModel() {
   offsetGunX = 0.1;
   gunPos = [2.25, -1.5, 0.8];
   gunRot = 0;
+  div_value = 1.2;
 }
