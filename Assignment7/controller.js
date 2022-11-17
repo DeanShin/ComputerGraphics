@@ -13,6 +13,7 @@ let view; //the "view" is our Canvas
 let timer; //used for Task 3 in the lab
 let game;
 let pressedKeys = {};
+let screen;
 
 function checkKey(event) {
   switch (event.keyCode) {
@@ -85,13 +86,13 @@ function lockChangeAlert() {
 
 function toggleFullScreen() {
   if (canvas.requestFullscreen) {
-    canvas.requestFullscreen();
+    screen.requestFullscreen();
   } else if (canvas.mozRequestFullScreen) {
-    canvas.mozRequestFullScreen(); // Firefox
+    screen.mozRequestFullScreen(); // Firefox
   } else if (canvas.webkitRequestFullscreen) {
-    canvas.webkitRequestFullscreen(); // Safari
+    screen.webkitRequestFullscreen(); // Safari
   } else if (canvas.msRequestFullscreen) {
-    canvas.msRequestFullscreen(); // IE/Edge
+    screen.msRequestFullscreen(); // IE/Edge
   } else if (document.exitFullscreen) {
     document.exitFullscreen();
   } else if (document.mozCancelFullScreen) {
@@ -103,6 +104,7 @@ function toggleFullScreen() {
 
 function controller() {
   //set up the view and the model
+  screen = document.getElementById('screen');
   view = initView(); //initView is defined in view.js
   model = initModel(view); //initModel is defined in model.js
   game = new Game();
@@ -113,15 +115,15 @@ function controller() {
       drawModel();
     }, 100);
 
-    canvas.requestPointerLock =
-      canvas.requestPointerLock || canvas.mozRequestPointerLock;
+    screen.requestPointerLock =
+    screen.requestPointerLock || screen.mozRequestPointerLock;
     document.exitPointerLock =
       document.exitPointerLock || document.mozExitPointerLock;
     drawModel(); // defined in model.js
-    canvas.addEventListener("mousemove", checkMouse, true);
+    screen.addEventListener("mousemove", checkMouse, true);
     window.onkeydown = checkKey; //call checkKey whenever a key is pressed
-    canvas.onclick = () => {
-      canvas.requestPointerLock();
+    screen.onclick = () => {
+      screen.requestPointerLock();
     };
     document.addEventListener("pointerlockchange", lockChangeAlert, false);
     document.addEventListener("mozpointerlockchange", lockChangeAlert, false);
