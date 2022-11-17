@@ -1,9 +1,3 @@
-//FileName:		ground.js
-//Programmer:	Dan Cliburn
-//Date:			9/24/2020
-//Purpose:		This file defines the code for our colored background model
-
-//These variables can be accessed in any function
 let groundVAO, roofVAO, wallVAO1, wallVAO2, wallVAO3, wallVAO4;
 
 //Set up the buffer and VAO we need for rendering the ground

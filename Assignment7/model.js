@@ -18,7 +18,7 @@ let rotY,
   aim = []; //variables to control movement
 let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
 let mat4;
-let floorTex, yosemiteTex, tigerTex, starTex, gunTex, bulletTex, targetTex;
+let floorTex, wallTex, tigerTex, starTex, gunTex, bulletTex, targetTex;
 let offsetGun, offsetGunX, angle;
 let gunPos;
 let gunRot;
@@ -164,13 +164,12 @@ function initTex(id, tex) {
 
 //Initialize textures to be used in the program
 function initTextures() {
-  floorTex = initTex("glacier", floorTex); //the image with id 'glacier' was loaded in Lab10.html
-  yosemiteTex = initTex("yosemite", yosemiteTex); //the image with id 'yosemite' was loaded in Lab10.html
-  tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
+  floorTex = initTex("floor", floorTex); //the image with id 'glacier' was loaded in Lab10.html
+  wallTex = initTex("wall", wallTex); //the image with id 'yosemite' was loaded in Lab10.html
   starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
   gunTex = initTex("gun", gunTex); //the image with id 'tree' was loaded in Lab10.html
   bulletTex = initTex("bullet", bulletTex); 
-  targetTex=initTex("target", targetTex)
+  targetTex=initTex("target", targetTex);
   //TODO 4 and 5: initialize your own textures here
 
   gl.bindTexture(gl.TEXTURE_2D, null);
@@ -194,22 +193,20 @@ function drawModel() {
     view_matrix,
     mat4.identity(model_matrix)
   );
-  //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
-
-
-  //position and then draw the cube
-  var vec = [12.0, 1.0, 12.0]; //position of the cube in the scene
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send current model matrix to the toon shaders
-  drawCube(gl); //defined in cube.js
-
-  //position and then draw the pyramid
-  var vec = [9.3, 1.0, 9.3]; //position of the pyramid in the scene
-  const x_axis = [1.0, 0.0, 0.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, 3.14159 / 2.0, x_axis); //NOTE: angle in radians
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send current model matrix to the toon shaders
-  drawPyramid(gl); //defined in pyramid.js
+    
+  for (const bullet of game.bullets) {
+    const vec = [bullet.position.x, bullet.position.y, bullet.position.z];
+    model_matrix = mat4.translate(
+      model_matrix,
+      mat4.identity(model_matrix),
+      vec
+    );
+    var vec1 = [-1.1, -0.05, 1.2];
+    model_matrix = mat4.scale(model_matrix, model_matrix, [0.01 , 0.03, 0.01]);
+    model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
+    gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
+    drawBullet(gl); //draw one point sprite at (0,5.0,0)
+  } 
 
   // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
   changeShaderProgram(
@@ -233,26 +230,22 @@ function drawModel() {
   drawRoof(gl); //draw the model of the ground, defined in ground.js
   // gl.activeTexture(gl.TEXTURE1); //Set the current texture number
   // gl.uniform1i(samplerLoc, 1); //tell shaders that the sample variable should be associated with gl.TEXTURE0
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawWall(gl,1);
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawWall(gl,2);
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawWall(gl,3);
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the glacierTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawWall(gl,4);
-  //Set up gl.TEXTURE0 as the active texture
-  // gl.activeTexture(gl.TEXTURE0); //Set the current texture number
-  // gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
-  //the third parameter (in this case 10.0) is the value to use for the shininess coefficient
   //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
   var x = eye[0];
   var y = eye[1];
@@ -287,19 +280,7 @@ function drawModel() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawGun(gl); //defined in gun.js
-  for (const bullet of game.bullets) {
-    const vec = [bullet.position.x, bullet.position.y, bullet.position.z];
-    model_matrix = mat4.translate(
-      model_matrix,
-      mat4.identity(model_matrix),
-      vec
-    );
-    var vec1 = [-1.1, -0.05, 1.2];
-    model_matrix = mat4.scale(model_matrix, model_matrix, [0.5, 0.5, 0.5]);
-    model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
-    gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-    drawBullet(gl); //draw one point sprite at (0,5.0,0)
-  }
+
   // *** Activate and bind uniform variables for the point_sprite_program shader ***
   changeShaderProgram(
     point_sprite_program,

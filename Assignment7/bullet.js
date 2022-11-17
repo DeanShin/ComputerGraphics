@@ -36,7 +36,7 @@ function drawBullet(gl)
     //bind the VAO for the ground
     gl.bindVertexArray(bulletVAO);
 
-    gl.vertexAttrib3f(1, 0, 0, 0); //use a static vertex attribute (location == 1) to set the color to green
+    gl.vertexAttrib3f(1, 1, 1, 0); //use a static vertex attribute (location == 1) to set the color to green
     gl.vertexAttrib3f(2, 1, 1, 1); //use a static vertex attribute (location == 2) to set the normal vector
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 13); //floor
     //Clean
