@@ -458,8 +458,20 @@ function initModel(view) {
 
 function updateEye(offset) {
   offsetGun = offsetGun + offset;
-  eye[0] += Math.cos(rotY) * offset;
-  eye[2] += Math.sin(rotY) * offset;
+  
+  if ((eye[2] < 16.9  && eye[2] > -16.9) && (eye[0] > -16.9 && eye[0] < 16.9) ) {
+    eye[0] += Math.cos(rotY) * offset;
+    eye[2] += Math.sin(rotY) * offset;
+  } else if (eye[2] >= 16.9  ) {
+    eye[2] = 16.89;
+  } else if (eye[2] <= -16.9) {
+    eye[2] = -16.89;
+  }
+    else if (eye[0] >= 16.9  ) {
+    eye[0] = 16.89;
+  } else if (eye[0] <= -16.9) {
+    eye[0] = -16.89;
+  }
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
@@ -469,8 +481,20 @@ function updateEye(offset) {
 
 function updateEyeX(offset) {
   offsetGunX = offsetGunX + offset;
-  eye[0] += Math.sin(-rotY) * offset;
-  eye[2] += Math.cos(-rotY) * offset;
+  
+  if ((eye[2] < 16.9  && eye[2] > -16.9) && (eye[0] > -16.9 && eye[0] < 16.9) ) {
+    eye[0] += Math.sin(-rotY) * offset;
+    eye[2] += Math.cos(-rotY) * offset;
+  } else if (eye[2] >= 16.9  ) {
+    eye[2] = 16.89;
+  } else if (eye[2] <= -16.9) {
+    eye[2] = -16.89;
+  }
+    else if (eye[0] >= 16.9  ) {
+    eye[0] = 16.89;
+  } else if (eye[0] <= -16.9) {
+    eye[0] = -16.89;
+  }
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
