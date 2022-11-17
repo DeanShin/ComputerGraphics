@@ -337,6 +337,7 @@ function drawModel() {
   var scale_amount = [1, 1, 1];
   const rotate_axis = [0.0, 1.0, 0.0];
   const rotate_axis1 = [0.0, 0.0, 1.0];
+  const rotate_axis2 = [1.0, 0.0, 0.0];
   model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
   model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
   model_matrix = mat4.rotate(
@@ -390,6 +391,12 @@ function drawModel() {
     model_matrix,
     -rotZ / div_value,
     rotate_axis1
+  ); //NOTE: angle in radians
+  model_matrix = mat4.rotate(
+    model_matrix,
+    model_matrix,
+    -rotZ / div_value,
+    rotate_axis2
   ); //NOTE: angle in radians
   var vec1 = [1, 0, -0.11];
   model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
@@ -466,6 +473,7 @@ function initModel(view) {
     rotZ = 0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis
     offsetGun = 0.1;
     offsetGunX = 0.1;
+    div_value = 1.2
     eye.push(0.0);
     eye.push(5.0);
     eye.push(-10.0);
@@ -544,4 +552,5 @@ function resetModel() {
   offsetGunX = 0.1;
   gunPos = [2.25, -1.5, 0.8];
   gunRot = 0;
+  div_value = 1.2
 }
