@@ -1,7 +1,7 @@
-//FileName:		controller.js
-//Programmer:	Dan Cliburn
-//Date:			9/22/2020
-//Purpose:		This file defines the code for our controller
+//FileName:	    controller.js
+//Programmers:  Dan Cliburn, Dean S., Chris S., Chris C.
+//Date:		      11/17/2022
+//Purpose:		  This file defines the code for our controller
 //The "controller" runs the program and handles events.
 
 alert(
@@ -10,9 +10,8 @@ alert(
 
 let model;
 let view; //the "view" is our Canvas
-let timer; //used for Task 3 in the lab
+let timer;
 let game;
-let pressedKeys = {};
 let screen;
 
 function checkKey(event) {
@@ -104,7 +103,7 @@ function toggleFullScreen() {
 
 function controller() {
   //set up the view and the model
-  screen = document.getElementById('screen');
+  screen = document.getElementById("screen");
   view = initView(); //initView is defined in view.js
   model = initModel(view); //initModel is defined in model.js
   game = new Game();
@@ -116,10 +115,9 @@ function controller() {
     }, 100);
 
     screen.requestPointerLock =
-    screen.requestPointerLock || screen.mozRequestPointerLock;
+      screen.requestPointerLock || screen.mozRequestPointerLock;
     document.exitPointerLock =
       document.exitPointerLock || document.mozExitPointerLock;
-    drawModel(); // defined in model.js
     screen.addEventListener("mousemove", checkMouse, true);
     window.onkeydown = checkKey; //call checkKey whenever a key is pressed
     screen.onclick = () => {
@@ -147,6 +145,7 @@ function controller() {
       },
       false
     );
+
     document.addEventListener(
       "keyup",
       function (event) {
@@ -156,6 +155,8 @@ function controller() {
       },
       false
     );
+
+    drawModel(); // defined in model.js
   } else {
     alert("Could not initialize the view and model");
   }

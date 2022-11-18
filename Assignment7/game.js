@@ -1,3 +1,8 @@
+//FileName:	    game.js
+//Programmers:  Dean S.
+//Date:		      11/17/2022
+//Purpose:		  This file defines the code for our game's state
+
 const dot = (a, b) => {
   if (a.length !== b.length) {
     console.error("Invalid dot product");
