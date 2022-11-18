@@ -25,7 +25,8 @@ let crosshairTex,
   restartTex,
   floorTex,
   wallTex,
-  targetTex;
+  targetTex,
+  corpseTex;
 // variables to control the gun's position
 let offsetGun, offsetGunX, gunPos, gunRot;
 
@@ -192,6 +193,7 @@ function initTextures() {
   winTex = initTex("win", winTex);
   loseTex = initTex("lose", loseTex);
   restartTex = initTex("restart", restartTex);
+  corpseTex = initTex("corpse", corpseTex);
 
   gl.bindTexture(gl.TEXTURE_2D, null);
 }
@@ -307,6 +309,18 @@ function drawModel() {
   );
 
   samplerLoc = gl.getUniformLocation(phongSpriteProgram, "tex_image"); //bind samplerLoc for this shader
+
+  // scatter some corpses around the room
+  for (const corpse of game.corpses) {
+    modelMatrix = mat4.translate(modelMatrix, mat4.identity(modelMatrix), [
+      corpse.x,
+      corpse.y,
+      corpse.z,
+    ]);
+    gl.uniformMatrix4fv(modelMatrixLoc, false, modelMatrix);
+    gl.bindTexture(gl.TEXTURE_2D, corpseTex);
+    gl.drawArrays(gl.POINTS, 0, 1);
+  }
 
   // Draw all of the active targets.
   for (const target of game.targets.filter(
