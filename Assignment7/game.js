@@ -147,6 +147,12 @@ class Game {
       );
     }
     this.bullets = [];
+    this.corpses = [];
+    for (let i = 0; i < 10; i++) {
+      this.corpses.push(
+        new Vector3(randomInBounds(-15, 15), 0.5, randomInBounds(-15, 15))
+      );
+    }
   }
 
   update() {

@@ -4,10 +4,10 @@ Programmers:    Dan Cliburn, Chris Ciobanu, Dean Shin, Chris Scrosati
 Date:           11/17/2022
 Purpose:		This file defines the html code necessary to run our WebGL 2 program.
 
-We created a first person shooting gallery for the extra credit. This game involves shooting 25 targets with a gun to win. 
-We implemented walking with the WASD and arrow keys and view movement with the mouse. 
-Shooting capability is from the gun. Win/loss states are determined from how many targets have been hit.
-Other features such as aiming down sights on the gun, full screen mode, pointer locking, gimbal locking etc. are supported.
+We created a first person shooting gallery for the extra credit.
+The user can walk around the scene with the WASD or arrow keys, and use their mouse to look around the environment.
+This game has 30 targets that can be shot down by the player--in order to win, the player must shoot down at least 25 of them.
+Additionally, other features such as aiming down sights on the gun, full screen mode, pointer locking, gimbal locking etc. are supported.
 -->
 
 <!-- Load image files -->
@@ -19,6 +19,7 @@ Other features such as aiming down sights on the gun, full screen mode, pointer 
 <img src="win.png" id="win" hidden />
 <img src="lose.png" id="lose" hidden />
 <img src="restart.png" id="restart" hidden />
+<img src="corpse.png" id="corpse" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
@@ -179,8 +180,9 @@ Other features such as aiming down sights on the gun, full screen mode, pointer 
      
         void main(void) 
         {  
-            gl_PointSize = 50.0;  //NOTE: the value assigned to gl_PointSize must be a float
-            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vertexPosition;
+            vec4 pos = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition.x, vertexPosition.y, vertexPosition.z, 1.0);
+            gl_PointSize = (1.0 - pos.z / pos.w) * 5000.0; //set gl_PointSize for point sprites as a function of the distance from viewer
+            gl_Position = pos;
         }
     </script>
     <script id="point-sprite-fragment-shader" type="shader.frag">
@@ -302,7 +304,7 @@ Other features such as aiming down sights on the gun, full screen mode, pointer 
         void main()
         {
             gl_Position = vec4(vPosition.x, vPosition.y, 0.0, 1.0);
-            gl_PointSize = 500.0;
+            gl_PointSize = 200.0;
         }
     </script>
     <script id="ui-fragment-shader" type="shader.frag">
