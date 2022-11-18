@@ -1,38 +1,33 @@
-//FileName:		model.js
-//Programmer:	Dan Cliburn
-//Date:			9/22/2020
-//Purpose:		This file defines the code for our WebGL 2 model
+//FileName:		  model.js
+//Programmers:  Dan Cliburn, Dean S., Chris S., Chris C.
+//Date:			    11/17/2022
+//Purpose:		  This file defines the code for our WebGL 2 model
 //The "model" is all of the WebGL2 code that draws our graphics scene
 
 //These variables can be accessed in any function
 let gl;
-let phong_tex_program,
-  toon_program,
-  point_sprite_program,
-  fog_program,
-  ui_program;
-let projection_matrix,
-  view_matrix,
-  model_matrix,
-  scale_matrix,
-  translate_matrix;
+let mat4;
+// programs
+let phongTexProgram, phongSpriteProgram, fogProgram, uiProgram;
+// matrices
+let projectionMatrix, viewMatrix, modelMatrix;
+let projectionMatrixLoc, viewMatrixLoc, modelMatrixLoc;
+// variables to control movement
 let rotY,
   rotZ,
   eye = [],
-  aim = []; //variables to control movement
-let modelMatrixLoc, viewMatrixLoc, projectionMatrixLoc;
-let mat4;
-let glacierTex,
-  yosemiteTex,
-  tigerTex,
-  starTex,
+  aim = [];
+// textures
+let crosshairTex,
   gunTex,
   winTex,
   loseTex,
-  restartTex;
-let offsetGun, offsetGunX, angle;
-let gunPos;
-let gunRot;
+  restartTex,
+  floorTex,
+  wallTex,
+  targetTex;
+// variables to control the gun's position
+let offsetGun, offsetGunX, gunPos, gunRot;
 
 //Given a canvas element, return the WebGL2 context
 //This function is defined in section "Architecture Updates" of the textbook
@@ -71,61 +66,50 @@ function getShader(id) {
 
 //Load all of the shader programs
 function initPrograms() {
-  //Load, compile, and link the shader code for the phong_tex_program
+  //Load, compile, and link the shader code for the phongTexProgram
   const vertexShader1 = getShader("phong-tex-vertex-shader");
   const fragmentShader1 = getShader("phong-tex-fragment-shader");
-  phong_tex_program = gl.createProgram(); //create a program
+  phongTexProgram = gl.createProgram(); //create a program
 
-  gl.attachShader(phong_tex_program, vertexShader1); //Attach the vertex shader to this program
-  gl.attachShader(phong_tex_program, fragmentShader1); //Attach the fragment shader to this program
-  gl.linkProgram(phong_tex_program);
-  if (!gl.getProgramParameter(phong_tex_program, gl.LINK_STATUS)) {
+  gl.attachShader(phongTexProgram, vertexShader1); //Attach the vertex shader to this program
+  gl.attachShader(phongTexProgram, fragmentShader1); //Attach the fragment shader to this program
+  gl.linkProgram(phongTexProgram);
+  if (!gl.getProgramParameter(phongTexProgram, gl.LINK_STATUS)) {
     console.error("Could not initialize phong_tex_program shaders");
   }
 
-  //Load, compile, and link the shader code for the toon_program
-  const vertexShader2 = getShader("toon-vertex-shader");
-  const fragmentShader2 = getShader("toon-fragment-shader");
-  toon_program = gl.createProgram(); //create a program
-
-  gl.attachShader(toon_program, vertexShader2); //Attach the vertex shader to this program
-  gl.attachShader(toon_program, fragmentShader2); //Attach the fragment shader to this program
-  gl.linkProgram(toon_program);
-  if (!gl.getProgramParameter(toon_program, gl.LINK_STATUS)) {
-    console.error("Could not initialize phong_tex_program shaders");
-  }
-
-  //Load, compile, and link the shader code for the point_sprite_program
+  //Load, compile, and link the shader code for the pointSpriteProgram
   const vertexShader3 = getShader("point-sprite-vertex-shader");
   const fragmentShader3 = getShader("point-sprite-fragment-shader");
-  point_sprite_program = gl.createProgram(); //create a program
+  phongSpriteProgram = gl.createProgram(); //create a program
 
-  gl.attachShader(point_sprite_program, vertexShader3); //Attach the vertex shader to this program
-  gl.attachShader(point_sprite_program, fragmentShader3); //Attach the fragment shader to this program
-  gl.linkProgram(point_sprite_program);
-  if (!gl.getProgramParameter(point_sprite_program, gl.LINK_STATUS)) {
+  gl.attachShader(phongSpriteProgram, vertexShader3); //Attach the vertex shader to this program
+  gl.attachShader(phongSpriteProgram, fragmentShader3); //Attach the fragment shader to this program
+  gl.linkProgram(phongSpriteProgram);
+  if (!gl.getProgramParameter(phongSpriteProgram, gl.LINK_STATUS)) {
     console.error("Could not initialize point_sprite_program shaders");
   }
 
-  //Load, compile, and link the shader code for the fog_program
-  const vertexShader4 = getShader("toon-vertex-shader");
+  //Load, compile, and link the shader code for the fogProgram
+  const vertexShader4 = getShader("fog-vertex-shader");
   const fragmentShader4 = getShader("fog-fragment-shader");
-  fog_program = gl.createProgram();
+  fogProgram = gl.createProgram();
 
-  gl.attachShader(fog_program, vertexShader4);
-  gl.attachShader(fog_program, fragmentShader4);
-  gl.linkProgram(fog_program);
-  if (!gl.getProgramParameter(fog_program, gl.LINK_STATUS)) {
+  gl.attachShader(fogProgram, vertexShader4);
+  gl.attachShader(fogProgram, fragmentShader4);
+  gl.linkProgram(fogProgram);
+  if (!gl.getProgramParameter(fogProgram, gl.LINK_STATUS)) {
     console.error("Could not initialize fog_program shaders");
   }
 
+  //Load, compile, and link the shader code for the uiProgram
   const vertexShader5 = getShader("ui-vertex-shader");
   const fragmentShader5 = getShader("ui-fragment-shader");
-  ui_program = gl.createProgram();
-  gl.attachShader(ui_program, vertexShader5);
-  gl.attachShader(ui_program, fragmentShader5);
-  gl.linkProgram(ui_program);
-  if (!gl.getProgramParameter(ui_program, gl.LINK_STATUS)) {
+  uiProgram = gl.createProgram();
+  gl.attachShader(uiProgram, vertexShader5);
+  gl.attachShader(uiProgram, fragmentShader5);
+  gl.linkProgram(uiProgram);
+  if (!gl.getProgramParameter(uiProgram, gl.LINK_STATUS)) {
     console.error("Could not initialize ui_program shaders");
   }
 }
@@ -167,12 +151,16 @@ function changeShaderProgram(program, lights, projection, view, model) {
 
 //initialize all of the buffers we need for our program
 function initBuffers() {
-  initGround(gl); //defined in ground.js
+  // defined in room.js
+  initGround(gl);
+  initRoof(gl);
   initWall(gl);
-  initPyramid(gl); //define in pyrmaid.js
-  initCube(gl); //defined in cube.js
-  initTexSquare(gl); //defined in texsquare.js
-  initGun(gl); // defined in gun.js
+  // defined in texsquare.js
+  initTexSquare(gl);
+  // defined in gun.js
+  initGun(gl);
+  // defined in bullet.js
+  initBullet(gl);
 }
 
 function initTex(id, tex) {
@@ -195,12 +183,13 @@ function initTex(id, tex) {
 
 //Initialize textures to be used in the program
 function initTextures() {
-  glacierTex = initTex("glacier", glacierTex); //the image with id 'glacier' was loaded in Lab10.html
-  yosemiteTex = initTex("yosemite", yosemiteTex); //the image with id 'yosemite' was loaded in Lab10.html
-  tigerTex = initTex("tiger", tigerTex); //the image with id 'tiger' was loaded in Lab10.html
-  starTex = initTex("star", starTex); //the image with id 'star' was loaded in Lab10.html
-  gunTex = initTex("gun", gunTex); //the image with id 'gun' was loaded in Lab10.html
-  winTex = initTex("win", winTex); //the iamge with id 'win' was loaded in Lab10.html
+  // These images are loaded in index.html
+  floorTex = initTex("floor", floorTex);
+  wallTex = initTex("wall", wallTex);
+  crosshairTex = initTex("crosshair", crosshairTex);
+  targetTex = initTex("target", targetTex);
+  gunTex = initTex("gun", gunTex);
+  winTex = initTex("win", winTex);
   loseTex = initTex("lose", loseTex);
   restartTex = initTex("restart", restartTex);
 
@@ -215,211 +204,167 @@ function drawModel() {
 
   //define the view orientation transformation matrix based on current values for eye, aim, and up
   const up = [0.0, 1.0, 0];
-  view_matrix = mat4.lookAt(view_matrix, eye, aim, up); //calculate the view orientation matrix
+  viewMatrix = mat4.lookAt(viewMatrix, eye, aim, up); //calculate the view orientation matrix
 
-  // *** Set the active shader program to the toon shader, then bind uniform variables and update matrices for this shader ***
+  // Set the active shader program to the fogProgram, then bind uniform variables and update matrices for this shader
   changeShaderProgram(
-    fog_program,
+    fogProgram,
     1,
-    projection_matrix,
-    view_matrix,
-    mat4.identity(model_matrix)
+    projectionMatrix,
+    viewMatrix,
+    mat4.identity(modelMatrix)
   );
-  //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
-  const fogColorLoc = gl.getUniformLocation(fog_program, "fogColor");
+  const fogColorLoc = gl.getUniformLocation(fogProgram, "fogColor");
   gl.uniform4f(fogColorLoc, 0.1, 0, 0.1, 0.5);
 
-  //position and then draw the cube
-  var vec = [12.0, 1.0, 12.0]; //position of the cube in the scene
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send current model matrix to the toon shaders
-  drawCube(gl); //defined in cube.js
-
-  //position and then draw the pyramid
-  var vec = [9.3, 1.0, 9.3]; //position of the pyramid in the scene
-  const x_axis = [1.0, 0.0, 0.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, 3.14159 / 2.0, x_axis); //NOTE: angle in radians
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send current model matrix to the toon shaders
-  drawPyramid(gl); //defined in pyramid.js
-
-  for (const target of game.targets.filter(
-    (target) => target.state === TargetState.ACTIVE
-  )) {
-    const vec = [target.position.x, target.position.y, target.position.z];
-    model_matrix = mat4.translate(
-      model_matrix,
-      mat4.identity(model_matrix),
-      vec
-    );
-    gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix);
-    drawCube(gl);
-  }
-
+  // Draw all of the bullets
   for (const bullet of game.bullets) {
     const vec = [bullet.position.x, bullet.position.y, bullet.position.z];
-    model_matrix = mat4.translate(
-      model_matrix,
-      mat4.identity(model_matrix),
-      vec
-    );
-    gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix);
-    drawPyramid(gl);
+    modelMatrix = mat4.translate(modelMatrix, mat4.identity(modelMatrix), vec);
+    modelMatrix = mat4.scale(modelMatrix, modelMatrix, [0.03, 0.05, 0.03]);
+    // Add a small visual offset
+    var vec1 = [-1.1, -0.05, 1.2];
+    modelMatrix = mat4.translate(modelMatrix, modelMatrix, vec1);
+    gl.uniformMatrix4fv(modelMatrixLoc, false, modelMatrix); //send the updated model matrix to the shaders
+    drawBullet(gl);
   }
 
-  // *** Set active shader program to phong_tex_program, then bind uniform variables and update matrices for this shader ***
+  // Set active shader program to phongTexProgram, then bind uniform variables and update matrices for this shader
   changeShaderProgram(
-    phong_tex_program,
+    phongTexProgram,
     1,
-    projection_matrix,
-    view_matrix,
-    mat4.identity(model_matrix)
+    projectionMatrix,
+    viewMatrix,
+    mat4.identity(modelMatrix)
   );
-  //Note that the second parameter of 1 indicates that the light uniforms should be bound for this shader
-  var samplerLoc = gl.getUniformLocation(phong_tex_program, "tex_image"); //bind samplerLoc for this shader
+  var samplerLoc = gl.getUniformLocation(phongTexProgram, "tex_image"); //bind samplerLoc for this shader
   gl.activeTexture(gl.TEXTURE0); //Set the current texture number
   gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
-  gl.bindTexture(gl.TEXTURE_2D, glacierTex); //use the glacierTex for this square
+
+  // Draw the ground
+  gl.bindTexture(gl.TEXTURE_2D, floorTex); //use the floorTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawGround(gl); //draw the model of the ground, defined in ground.js
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the glacierTex for this square
+
+  // Draw the roof
+  gl.bindTexture(gl.TEXTURE_2D, floorTex); //use the floorTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawRoof(gl); //draw the model of the ground, defined in ground.js
+
+  // Draw the walls
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the wallTex for this square
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawWall(gl, 1);
-  //Set up gl.TEXTURE0 as the active texture
-  // gl.activeTexture(gl.TEXTURE0); //Set the current texture number
-  // gl.uniform1i(samplerLoc, 0); //tell shaders that the sample variable should be associated with gl.TEXTURE0
 
-  //position and draw the first textured square with the glacier texture
-  const y_axis = [0.0, 1.0, 0.0];
-  const color = [1.0, 1.0, 1.0];
-  vec = [-10.0, 5.0, 10.0]; //position of texsquare #1 in the scene
-  var scale = [2.0, 2.0, 2.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, 3.14159 / 2.0, y_axis); //NOTE: angle in radians
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  gl.bindTexture(gl.TEXTURE_2D, glacierTex); //use the glacierTex for this square
-  drawTexSquare(gl, color, 100.0); //defined in texsquare.js
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the wallTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawWall(gl, 2);
 
-  //position and draw the second textured square with the yosemite texture
-  vec = [13.0, 10.0, -13.0]; //position of texsquare #2 in the scene
-  scale = [10.0, 10.0, 10.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -3.14159 / 4.0,
-    y_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  gl.bindTexture(gl.TEXTURE_2D, yosemiteTex); //use the yosemiteTex for this square
-  drawTexSquare(gl, color, 10.0); //defined in texsquare.js
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the wallTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawWall(gl, 3);
 
-  //position and draw the third textured square with the tiger texture
-  vec = [-13.0, 10.0, -13.0]; //position of texsquare #3 in the scene
-  var scale = [10.0, 10.0, 10.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, 3.14159 / 4.0, y_axis); //NOTE: angle in radians
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  gl.bindTexture(gl.TEXTURE_2D, tigerTex); //use the tigerTex for this square
-  drawTexSquare(gl, color, 10.0); //the second parameter (color) is the color of the polygon before the texture is applied
-  //the third parameter (in this case 10.0) is the value to use for the shininess coefficient
-  //TODO 4: bind your texture, and position and draw a fourth textured square with your own image as the texture
-  var x = eye[0];
-  var y = eye[1];
-  var z = eye[2];
+  gl.bindTexture(gl.TEXTURE_2D, wallTex); //use the v for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  drawWall(gl, 4);
+
+  // Draw the gun
   var div_value = 1.2;
-  vec = [x, y, z]; //position of the gun in the scene
   var scale_amount = [1, 1, 1];
   const rotate_axis = [0.0, 1.0, 0.0];
   const rotate_axis1 = [0.0, 0.0, 1.0];
   const rotate_axis2 = [1.0, 0.0, 0.0];
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.scale(model_matrix, model_matrix, scale_amount);
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -0.1 - rotY,
-    rotate_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
+  modelMatrix = mat4.translate(modelMatrix, mat4.identity(modelMatrix), eye);
+  modelMatrix = mat4.scale(modelMatrix, modelMatrix, scale_amount);
+  modelMatrix = mat4.rotate(modelMatrix, modelMatrix, -0.1 - rotY, rotate_axis); //NOTE: angle in radians
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    modelMatrix,
     -rotZ / div_value,
     rotate_axis1
   ); //NOTE: angle in radians
-  model_matrix = mat4.translate(model_matrix, model_matrix, gunPos);
-  model_matrix = mat4.rotate(model_matrix, model_matrix, gunRot, rotate_axis); //NOTE: angle in radians
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  gl.bindTexture(gl.TEXTURE_2D, gunTex); //use the glacierTex for this square
-  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT);
+  modelMatrix = mat4.translate(modelMatrix, modelMatrix, gunPos);
+  modelMatrix = mat4.rotate(modelMatrix, modelMatrix, gunRot, rotate_axis); //NOTE: angle in radians
+  gl.uniformMatrix4fv(modelMatrixLoc, false, modelMatrix); //send the updated model matrix to the shaders
+  gl.bindTexture(gl.TEXTURE_2D, gunTex); //use the gunTex for this square
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   drawGun(gl); //defined in gun.js
-  // *** Activate and bind uniform variables for the point_sprite_program shader ***
-  changeShaderProgram(
-    point_sprite_program,
-    0,
-    projection_matrix,
-    view_matrix,
-    mat4.identity(model_matrix)
-  );
-  //Note that the second parameter of 0 indicates that the light uniforms should NOT be bound for this shader
-  samplerLoc = gl.getUniformLocation(point_sprite_program, "tex_image"); //bind samplerLoc for this shader
 
-  x = eye[0];
-  y = eye[1];
-  z = eye[2];
-  vec = [x, y, z]; //position of the gun in the scene
-  model_matrix = mat4.translate(model_matrix, mat4.identity(model_matrix), vec);
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
-    -0.1 - rotY,
-    rotate_axis
-  ); //NOTE: angle in radians
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
+  // Activate and bind uniform variables for the pointSpriteProgram shader
+  changeShaderProgram(
+    phongSpriteProgram,
+    0,
+    projectionMatrix,
+    viewMatrix,
+    mat4.identity(modelMatrix)
+  );
+
+  samplerLoc = gl.getUniformLocation(phongSpriteProgram, "tex_image"); //bind samplerLoc for this shader
+
+  // Draw all of the active targets.
+  for (const target of game.targets.filter(
+    (target) => target.state === TargetState.ACTIVE
+  )) {
+    const vec = [target.position.x, target.position.y, target.position.z];
+    modelMatrix = mat4.translate(modelMatrix, mat4.identity(modelMatrix), vec);
+    gl.uniformMatrix4fv(modelMatrixLoc, false, modelMatrix);
+    gl.bindTexture(gl.TEXTURE_2D, targetTex);
+    gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
+  }
+
+  // Draw the crosshair
+  modelMatrix = mat4.translate(modelMatrix, mat4.identity(modelMatrix), eye);
+  modelMatrix = mat4.rotate(modelMatrix, modelMatrix, -0.1 - rotY, rotate_axis); //NOTE: angle in radians
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    modelMatrix,
     -rotZ / div_value,
     rotate_axis1
   ); //NOTE: angle in radians
-  model_matrix = mat4.rotate(
-    model_matrix,
-    model_matrix,
+  modelMatrix = mat4.rotate(
+    modelMatrix,
+    modelMatrix,
     -rotZ / div_value,
     rotate_axis2
   ); //NOTE: angle in radians
   var vec1 = [1, 0, -0.11];
-  model_matrix = mat4.translate(model_matrix, model_matrix, vec1);
-  gl.uniformMatrix4fv(modelMatrixLoc, false, model_matrix); //send the updated model matrix to the shaders
-  gl.bindTexture(gl.TEXTURE_2D, starTex);
+  modelMatrix = mat4.translate(modelMatrix, modelMatrix, vec1);
+  gl.uniformMatrix4fv(modelMatrixLoc, false, modelMatrix); //send the updated model matrix to the shaders
+  gl.bindTexture(gl.TEXTURE_2D, crosshairTex);
+  // Draw a point sprite at (0, 0, 0)
   gl.vertexAttrib3f(0, 0, 0, 0);
-  gl.drawArrays(gl.POINTS, 0, 1); //draw one point sprite at (0,5.0,0)
+  gl.drawArrays(gl.POINTS, 0, 1);
 
   // Setup 2D program
-  gl.useProgram(ui_program);
+  gl.useProgram(uiProgram);
 
   if (game.state === GameState.WIN) {
     gl.bindTexture(gl.TEXTURE_2D, winTex);
+    // Draw a point sprite at (0, 0, 0)
     gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
     gl.drawArrays(gl.POINTS, 0, 1);
   } else if (game.state === GameState.LOSE) {
     gl.bindTexture(gl.TEXTURE_2D, loseTex);
+    // Draw a point sprite at (0, 0, 0)
     gl.vertexAttrib3f(0, 0, 0, 0); //use a static vertex attribute (location == 0) to set the position to (0, 0, 0, 0)
     gl.drawArrays(gl.POINTS, 0, 1);
   }
 
   if (game.state === GameState.WIN || game.state === GameState.LOSE) {
     gl.bindTexture(gl.TEXTURE_2D, restartTex);
+    // Draw a point sprite at (0, 0.5, 0)
     gl.vertexAttrib3f(0, 0, 0.5, 0);
     gl.drawArrays(gl.POINTS, 0, 1);
   }
 
+  // Update the score
   document.getElementById("score").innerHTML = game.targets.filter(
     (target) => target.state === TargetState.HIT
   ).length;
@@ -437,19 +382,21 @@ function initModel(view) {
     gl.clearColor(0.1, 0.1, 0.1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.enable(gl.DEPTH_TEST); //turn on the depth test
+    //turn on the depth test
+    gl.enable(gl.DEPTH_TEST);
 
-    initPrograms(); //load the shader programs
+    //load the shader programs
+    initPrograms();
 
     //Define mat4
     mat4 = glMatrix.mat4;
 
-    //Create matrices then define the projection transformation matrix here since it never changes
-    model_matrix = mat4.create();
-    view_matrix = mat4.create();
-    projection_matrix = mat4.create();
-    projection_matrix = mat4.frustum(
-      projection_matrix,
+    // Create matrices then define the projection transformation matrix here since it never changes
+    modelMatrix = mat4.create();
+    viewMatrix = mat4.create();
+    projectionMatrix = mat4.create();
+    projectionMatrix = mat4.frustum(
+      projectionMatrix,
       -0.1,
       0.1,
       -0.1,
@@ -458,7 +405,7 @@ function initModel(view) {
       50.0
     );
 
-    //create buffers for all the objects we want to render and load textures we will use
+    // create buffers for all the objects we want to render and load textures we will use
     initBuffers();
     initTextures();
 
@@ -466,17 +413,13 @@ function initModel(view) {
     gunPos = [2.25, -1.5, 0.8];
     gunRot = 0;
     rotY = 3.14159 / 2.0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis
-    rotZ = 0; //initial angle is PI/2 (90 degrees) which is looking down the positive z axis
+    rotZ = 0;
     offsetGun = 0.1;
     offsetGunX = 0.1;
     div_value = 1.2;
-    eye.push(0.0);
-    eye.push(5.0);
-    eye.push(-10.0);
-    aim.push(0.0);
-    aim.push(0.0);
-    aim.push(0.0);
-    updateEye(0.1); //will sets aim to be looking down the positive z-axis
+    eye = [0.0, 5.0, -10.0];
+    aim = [0.0, 0.0, 0.0];
+    updateEye(0.1); //will set aim to be looking down the positive z-axis
 
     return gl;
   }
@@ -485,8 +428,19 @@ function initModel(view) {
 
 function updateEye(offset) {
   offsetGun = offsetGun + offset;
-  eye[0] += Math.cos(rotY) * offset;
-  eye[2] += Math.sin(rotY) * offset;
+
+  if (eye[2] < 16.9 && eye[2] > -16.9 && eye[0] > -16.9 && eye[0] < 16.9) {
+    eye[0] += Math.cos(rotY) * offset;
+    eye[2] += Math.sin(rotY) * offset;
+  } else if (eye[2] >= 16.9) {
+    eye[2] = 16.89;
+  } else if (eye[2] <= -16.9) {
+    eye[2] = -16.89;
+  } else if (eye[0] >= 16.9) {
+    eye[0] = 16.89;
+  } else if (eye[0] <= -16.9) {
+    eye[0] = -16.89;
+  }
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
@@ -496,8 +450,19 @@ function updateEye(offset) {
 
 function updateEyeX(offset) {
   offsetGunX = offsetGunX + offset;
-  eye[0] += Math.sin(-rotY) * offset;
-  eye[2] += Math.cos(-rotY) * offset;
+
+  if (eye[2] < 16.9 && eye[2] > -16.9 && eye[0] > -16.9 && eye[0] < 16.9) {
+    eye[0] += Math.sin(-rotY) * offset;
+    eye[2] += Math.cos(-rotY) * offset;
+  } else if (eye[2] >= 16.9) {
+    eye[2] = 16.89;
+  } else if (eye[2] <= -16.9) {
+    eye[2] = -16.89;
+  } else if (eye[0] >= 16.9) {
+    eye[0] = 16.89;
+  } else if (eye[0] <= -16.9) {
+    eye[0] = -16.89;
+  }
 
   //Adjust the aim position from the new eye position
   aim[0] = eye[0] + Math.cos(rotY);
