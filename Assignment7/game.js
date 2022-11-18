@@ -1,3 +1,8 @@
+//FileName:	    game.js
+//Programmers:  Dean S.
+//Date:		      11/17/2022
+//Purpose:		  This file defines the code for our game's state
+
 const dot = (a, b) => {
   if (a.length !== b.length) {
     console.error("Invalid dot product");
@@ -118,6 +123,7 @@ const distance = (position1, position2) => {
 const GameState = {
   ACTIVE: "ACTIVE",
   WIN: "WIN",
+  LOSE: "LOSE",
 };
 
 class Game {
@@ -174,7 +180,14 @@ class Game {
           target.state === TargetState.INACTIVE
       ).length === 0
     ) {
-      this.state = GameState.WIN;
+      if (
+        this.targets.filter((target) => target.state === TargetState.HIT)
+          .length >= 25
+      ) {
+        this.state = GameState.WIN;
+      } else {
+        this.state = GameState.LOSE;
+      }
       this.bullets = [];
     }
   }

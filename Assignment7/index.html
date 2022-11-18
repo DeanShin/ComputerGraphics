@@ -1,21 +1,24 @@
 ﻿<!--
-FileName:       Lab10.html
-Programmer:     Dan Cliburn
-Date:           9/22/2020
+FileName:       index.html
+Programmers:    Dan Cliburn, Chris Ciobanu, Dean Shin, Chris Scrosati
+Date:           11/17/2022
 Purpose:		This file defines the html code necessary to run our WebGL 2 program.
-I've made an attempt to separate the parts of the program using the Model-View-Controller 
-design pattern. The model.js, view.js, and controller.js files define the code for those 
-components respectively. I define the vertex and fragment shader code in this file. We also
-load gl-matrix.js to perform matrix operations. New for Lab 10, we define multiple shader pairs.
-We are also loading additional JavaScript files to break the code up into more, but shorter, code files.
+
+We created a first person shooting gallery for the extra credit. This game involves shooting 25 targets with a gun to win. 
+We implemented walking with the WASD and arrow keys and view movement with the mouse. 
+Shooting capability is from the gun. Win/loss states are determined from how many targets have been hit.
+Other features such as aiming down sights on the gun, full screen mode, pointer locking, gimbal locking etc. are supported.
 -->
 
 <!-- Load image files -->
-<img src="floor3.jpg" id="glacier" hidden />
-<img src="wall.jpg" id="yosemite" hidden />
-<img src="tiger.bmp" id="tiger" hidden />
+<img src="floor.jpg" id="floor" hidden />
+<img src="wall.jpg" id="wall" hidden />
 <img src="gun.png" id="gun" hidden />
-<img src="crosshair2.png" id="star" hidden />
+<img src="crosshair.png" id="crosshair" hidden />
+<img src="target.png" id="target" hidden />
+<img src="win.png" id="win" hidden />
+<img src="lose.png" id="lose" hidden />
+<img src="restart.png" id="restart" hidden />
 <!-- The "hidden" tag keeps the html page from displaying the images on the page itself. We
      want to access the images in our JavaScript code and not have them displayed on the page.
      Also note that for this to work you must be running a local web server.
@@ -26,25 +29,20 @@ We are also loading additional JavaScript files to break the code up into more, 
 <head>
     <title>Assignment 7</title>
 
-    <style type="text/css">
-        canvas {
-            border: 5px solid black;
-        }
-    </style>
+    <link rel="stylesheet" href="./styles.css" />
 
-    <!-- load the javascript files used in the program-->
+    <!-- Load the javascript files used in the program-->
     <script src="game.js" defer></script>
     <script src="model.js" defer></script>
     <script src="view.js" defer></script>
     <script src="controller.js" defer></script>
-    <script src="ground.js" defer></script>
-    <script src="cube.js" defer></script>
+    <script src="room.js" defer></script>
     <script src="texsquare.js" defer></script>
-    <script src="pyramid.js" defer></script>
     <script src="gun.js" defer></script>
+    <script src="bullet.js" defer></script>
 
-    <script src="gl-matrix.js" defer></script>
     <!-- Load the gl-matrix.js file to do matrix operations. See: glmatrix.net -->
+    <script src="gl-matrix.js" defer></script>
 
     <!-- Define the vertex and fragment shaders -->
     <script id="phong-tex-vertex-shader" type="shader.vert">
@@ -167,98 +165,6 @@ We are also loading additional JavaScript files to break the code up into more, 
             frag_color = fcolor;
         }
     </script>
-
-    <script id="toon-vertex-shader" type="shader.vert">
-        #version 300 es //specifies that we want OpenGL ES 3.0
-        //This vertex shader is based on Example 7.8 on pages 377 and 378 of the OpenGL Programming Guide (8th edition)
-        //I modified the code somewhat to make it closer to the Phong Reflection Model discussed in COMP 153.
-        //For lab 7 it was modified to allow the eye position to move around the scene. Lighting calculations 
-        //are done in "eye" coordinates, so position and normal must be calculated appropriately.
-
-        layout(location = 0) in vec4 vertexPosition;
-        layout(location = 1) in vec4 vertexColor;
-        layout(location = 2) in vec3 vertexNormal;
-
-        uniform mat4 modelMatrix;
-        uniform mat4 viewMatrix;
-        uniform mat4 projectionMatrix;
-
-        out vec4 position; //position of the vertex in "eye" coordinates
-        out vec4 color;
-        out vec3 normal; //orientation of the normal in "eye" coordinates
-
-        void main()
-        {
-            //Assign the in variables (attributes) to out variables (varyings) so that
-            //they can be accessed in the fragment shader for lighting calculations.
-            position = viewMatrix * modelMatrix * vertexPosition; //position in "eye" coordinates
-            color = vertexColor;
-            //calculate the "normal matrix"
-            mat4 modelViewMatrix = viewMatrix * modelMatrix;
-            mat4 normalMatrix = transpose(inverse(modelViewMatrix));
-            vec4 n = normalMatrix * vec4(vertexNormal, 0.0);
-            normal = normalize(vec3(n.x, n.y, n.z)); //normalize just in case it is not a unit vector
-
-            //Here the input vertexPostion is multiplied by the model, view, and
-            //projection matrices to determine the final position of the vertex
-            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vertexPosition;
-        }
-    </script>
-    <script id="toon-fragment-shader" type="shader.frag">
-        #version 300 es //specifies that we want OpenGL ES 3.0
-        precision highp float; //specifies "high precision" - necessary to access the viewMatrix here
-        //The toon shader part of this code is adapted from: 
-        // www.lighthouse3d.com/tutorials/glsl-tutorial/toon-shading-version-iii/
-
-        //uniform variables
-        uniform vec3 globalAmbientLight;
-        uniform mat4 viewMatrix; //needed to transform the light positions into "eye" coordinates
-        uniform vec4 light_color; //color of light
-        uniform vec4 light_position; //location of light if w = 1, otherwise the direction towards the light
-
-        in vec4 position; //position of the fragment in "eye" coordinates
-        in vec4 color; //surface color at the fragment
-        in vec3 normal; //normal vector at the fragment in "eye" coordinates
-
-        out vec4 frag_color; //resulting fragment color after lighting is applied
-
-        void main()
-        {
-            //Implement a toon shader for lighting
-            vec3 colorSum = vec3(0.0, 0.0, 0.0);
-            vec3 n = normalize(normal);
-            vec3 L; //this will be the vector towards the light
-            vec3 I = light_color.rgb;  //Intensity (color) of the light
-            vec4 lightPos_eyeCoords = viewMatrix*light_position; //put light_position in "eye" coordinates
-
-            if (light_position.w > 0.1) //a positional light
-            {
-                vec4 LTemp = lightPos_eyeCoords - position;  //Calculate the L vector
-                L = normalize(vec3(LTemp.x, LTemp.y, LTemp.z)); //remove the w value from the L vector and normalize
-            }
-            else //a directional light
-            {
-                //remove w value to form the L vector and normalize
-                L = normalize(vec3(lightPos_eyeCoords.x, lightPos_eyeCoords.y, lightPos_eyeCoords.z));
-            }
-
-            float intensity = dot(L,n);
-            if (intensity > 0.95)
-                colorSum += color.rgb * I * 1.0;
-            else if (intensity > .75)
-                colorSum += color.rgb * I * 0.75;
-            else if (intensity > .5)
-                colorSum += color.rgb * I * 0.5;
-            else if (intensity > 0.25)
-                colorSum += color.rgb * I * 0.25;
-            else
-                colorSum += color.rgb * I * 0.05;
-
-            colorSum = colorSum + globalAmbientLight*color.rgb;  //compute the final color of the fragment
-            frag_color = vec4(colorSum.r, colorSum.g, colorSum.b, color.a);  //use the fragment's original alpha
-        }
-    </script>
-
     <script id="point-sprite-vertex-shader" type="shader.vert">
         #version 300 es
         precision mediump float;
@@ -293,6 +199,42 @@ We are also loading additional JavaScript files to break the code up into more, 
             frag_color = color;
             if (color.r <= threshold && color.g <= threshold && color.b <= threshold)
                 discard; //pretend this fragment doesn't exist (i.e. make it transparent)
+        }
+    </script>
+    <script id="fog-vertex-shader" type="shader.vert">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+        //This vertex shader is based on Example 7.8 on pages 377 and 378 of the OpenGL Programming Guide (8th edition)
+        //I modified the code somewhat to make it closer to the Phong Reflection Model discussed in COMP 153.
+        //For lab 7 it was modified to allow the eye position to move around the scene. Lighting calculations 
+        //are done in "eye" coordinates, so position and normal must be calculated appropriately.
+
+        layout(location = 0) in vec4 vertexPosition;
+        layout(location = 1) in vec4 vertexColor;
+        layout(location = 2) in vec3 vertexNormal;
+
+        uniform mat4 modelMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 projectionMatrix;
+
+        out vec4 position; //position of the vertex in "eye" coordinates
+        out vec4 color;
+        out vec3 normal; //orientation of the normal in "eye" coordinates
+
+        void main()
+        {
+            //Assign the in variables (attributes) to out variables (varyings) so that
+            //they can be accessed in the fragment shader for lighting calculations.
+            position = viewMatrix * modelMatrix * vertexPosition; //position in "eye" coordinates
+            color = vertexColor;
+            //calculate the "normal matrix"
+            mat4 modelViewMatrix = viewMatrix * modelMatrix;
+            mat4 normalMatrix = transpose(inverse(modelViewMatrix));
+            vec4 n = normalMatrix * vec4(vertexNormal, 0.0);
+            normal = normalize(vec3(n.x, n.y, n.z)); //normalize just in case it is not a unit vector
+
+            //Here the input vertexPostion is multiplied by the model, view, and
+            //projection matrices to determine the final position of the vertex
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vertexPosition;
         }
     </script>
     <script id="fog-fragment-shader" type="shader.frag">
@@ -352,6 +294,31 @@ We are also loading additional JavaScript files to break the code up into more, 
             frag_color = finalColor;
         }
     </script>
+    <script id="ui-vertex-shader" type="shader.vert">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+  
+        layout (location = 0) in vec4 vPosition;
+  
+        void main()
+        {
+            gl_Position = vec4(vPosition.x, vPosition.y, 0.0, 1.0);
+            gl_PointSize = 500.0;
+        }
+    </script>
+    <script id="ui-fragment-shader" type="shader.frag">
+        #version 300 es //specifies that we want OpenGL ES 3.0
+        precision mediump float;  //specifies "medium precision"
+  
+        uniform sampler2D tex_image; //Support for texture mapping
+
+        out vec4 frag_color; //this will be the fragment's color
+  
+        void main()
+        {
+            vec4 color = texture(tex_image, gl_PointCoord);
+            frag_color = color;
+        }
+    </script>
 
     <!-- Call our controller function from main once the document has loaded -->
     <script type="text/javascript">
@@ -363,9 +330,13 @@ We are also loading additional JavaScript files to break the code up into more, 
 </head>
 
 <body>
-    <canvas id="webgl-canvas" width="1920" height="1080">
-        Your browser does not support the HTML5 canvas element.
-    </canvas>
+    <div id="screen">
+        <canvas id="webgl-canvas" width="1280" height="720">
+            Your browser does not support the HTML5 canvas element.
+        </canvas>
+        <h1>Targets hit: <span id="score">0</span>/30</h1>
+    </div>
+
 </body>
 
 </html>
